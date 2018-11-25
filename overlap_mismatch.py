@@ -8,7 +8,7 @@ from collections import defaultdict
 import pysam
 
 strt = time.time()
-
+# All changes to devel branch please
 # Code to calculate mismatches to the reference genome in overlapping read-pairs. This Version differs from the
 # initial implementation that used random access to get the mate pair. I am now hashing the reads until its mate is
 # found. This is substantially faster and allows for the analysis of biobank scale datasets
