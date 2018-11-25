@@ -1,11 +1,11 @@
+# coding=utf-8
 import os
-import pickle
-import pysam
 import re
 import sys
 import time
 from collections import Counter
 from collections import defaultdict
+import pysam
 
 strt = time.time()
 
@@ -14,7 +14,7 @@ strt = time.time()
 # found. This is substantially faster and allows for the analysis of biobank scale datasets
 
 
-# Also need to write an implementation of Lawrence Etwillers DNA damage extimator. this basically just looks for
+# Also need to write an implementation of Lawrence Etwillers DNA damage estimator. this basically just looks for
 # reverse complement agreement in the read2 read. # Need to think about this more i,e does the position of the
 # substitution matter in the read or is it just we see more G->T in r1 and less C-A in R2 irrespective if they occur
 # at the same loci. I'n not convinced DNA damage will be that critical we are requiring the pair to agree on the
@@ -22,7 +22,7 @@ strt = time.time()
 # Exome data. Will test with WGS if there is data available with enough sequencing depth . have downloaded the "high
 # coverage" HG0096 WGS and currently testing to see any pronounced differences
 
-#  genome = pysam.Fastafile('/home/declan/phd/Homo_sapiens.GRCh37.dna.toplevel.fa.gz)
+#  genome = pysam.Fastafile('/home/declan/phd/Homo_sapiens.GRCh37.dna.toplevel.fa.gz')
 # this can be used for getting +1-1 bases from reference fasta if choosing to not take from alignment sequence
 
 # # Will also need to derive a qc plan. WGS data for G1K doesnt have MD-Ztags Try to access samtools calmd function
@@ -88,7 +88,7 @@ print("Mapping Quality is {}\n".format(mp_q))
 ## reverse complement not currently used will need it for strand asymmetry
 def reverse_complement(dna):
     complement = {'A': 'T', 'C': 'G', 'G': 'C', 'T': 'A'}
-    return ''.join([complement[base] for base in dna[::-1]])  # [::-1] reads a string right to left
+    return ''.join([complement[base] for base in dna[::-1]])
 
 
 def read_r1_1st_overlap(pos, mpos, rlen, mlen, md1, md2):
