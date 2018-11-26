@@ -35,12 +35,10 @@ cvg = 20  # 'coverage
 mp_q = 60  # read mapping quality
 ################################
 
-
 ###########################
 print("Base Quality Threshold is {}".format(bs_q))
 print("Putative Mutation Sequencing Depth Threshold is {}".format(cvg))
 print("Mapping Quality is {}\n".format(mp_q))
-
 
 ###########################
 
@@ -71,7 +69,6 @@ def reverse_complement(dna):
     complement = {'A': 'T', 'C': 'G', 'G': 'C', 'T': 'A'}
     return ''.join([complement[base] for base in dna[::-1]])
 
-
 def read_r1_1st_overlap(pos, mpos, rlen, mlen, md1, md2):
     if mpos in range(pos, pos + rlen) and '^' not in md1 and '^' not in md2 and str(rlen) != md1:
         if str(mlen) != md2:
@@ -86,7 +83,6 @@ def read_r1_1st_overlap(pos, mpos, rlen, mlen, md1, md2):
             return False
     else:
         return False
-
 
 def read_r2_1st_overlap(pos, mpos, rlen, mlen, md1, md2):
     if pos in range(mpos, mpos + mlen) and '^' not in md1 and '^' not in md2 and str(rlen) != md1:
@@ -103,7 +99,6 @@ def read_r2_1st_overlap(pos, mpos, rlen, mlen, md1, md2):
     else:
         return False
 
-
 def ref_matches(align_type, idx, rcig, mcig, MDZ):  # remember to MDZ=MDZ1 etc
     if align_type.isdigit() and 0 != int(align_type) and len(MDZ) - 1 != idx and 'D' not in str(
             rcig) and 'D' not in str(mcig) and 'I' not in str(rcig) and 'I' not in str(mcig) and 'H' not in str(
@@ -113,13 +108,11 @@ def ref_matches(align_type, idx, rcig, mcig, MDZ):  # remember to MDZ=MDZ1 etc
     else:
         return False
 
-
 def filter1(read, SAM, mp_q):
     if read.mapq >= mp_q and read2.mapq >= mp_q and read.tid == read2.tid:
         return True
     else:
         return False
-
 
 def chk_cov_snp_ql(read, cov, m1_pos, read_pos, bs_q, rref, snp_loc):
     if int(cov.pos) == int(m1_pos) and int(cov.n) >= cvg and read.query_qualities[(int(read_pos))] >= bs_q and (
@@ -129,7 +122,6 @@ def chk_cov_snp_ql(read, cov, m1_pos, read_pos, bs_q, rref, snp_loc):
     else:
         return False
 
-
 def ref_mismatches(align_type, nucs, rcig, mcig):
     if align_type.isalpha() and align_type in nucs and len(align_type) == 1 and 'D' not in str(rcig) and 'D' not in str(
             mcig) and 'I' not in str(rcig) and 'I' not in str(mcig) and 'H' not in str(mcig) and 'H' not in str(
@@ -137,7 +129,6 @@ def ref_mismatches(align_type, nucs, rcig, mcig):
         return True
     else:
         return False
-
 
 def read_pair_generator(bam, region_string=None):
     # Generate read pairs in a BAM file or within a region string.
@@ -160,21 +151,20 @@ def read_pair_generator(bam, region_string=None):
                 yield read_dict[qname][0], read
             del read_dict[qname]
 
-
 #######
 
 
 #######
-
 
 num_reads = 1499999  # progression output
 read_counts = 0
-
 name = BAM.split('.')[0]
+
 if not os.path.exists(name):
     os.makedirs(name)
 print('Running get_overlaps to estimate mismatches for sample {}\n'.format(name))
 ovrlp_seq = 0
+
 with pysam.AlignmentFile(BAM, 'rb') as SAM:
     print("File {} opened".format(BAM))
     for read, read2 in read_pair_generator(SAM):
