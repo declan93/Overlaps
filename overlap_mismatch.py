@@ -308,12 +308,14 @@ with pysam.AlignmentFile(BAM, 'rb') as SAM:
             num_reads += 1500000
 
 print('Writing mutations to file \n')
+
 with open(name + '/' + name + '_substitutions.out', 'w') as out:
     for key, value in tmismatch.items():
         outstring = str(key) + '\t' + str(value) + '\n'
         out.write(outstring)
 
 print('Calculating Mutation counts where Pair agree \n')
+
 with open(name + '/' + name + '_sub_counts.out', 'w') as cnts:
     subs = Counter(tmismatch.values())
     cnts.write('Sub Count Overlap\n')
@@ -322,6 +324,7 @@ with open(name + '/' + name + '_sub_counts.out', 'w') as cnts:
         cnts.write(out)
 
 print('making VCF for {}'.format(name))
+
 with open(name + '/' + name + '_substitutions.out', 'r') as IN:
     with open(name + '/' + name + '.vcf', 'w') as out:
         out.write(
@@ -381,6 +384,7 @@ with open(name + '/' + name + '_substitutions.out', 'r') as IN:
                 0] + '\t' + ref + '\t' + mut + '\t.\t.\t.\t.\t1/0\n'
             out.write(out_str)
 tme = (time.time() - strt) / 3600
+
 print('overlap_mismatch has completed. The number of overlapping bases is {}\n \
     The number of putative mismatches is {}\n \
 	The time taking to analyse {} was {} hrs'.format(ovrlp_seq, sum(subs.values()), name, tme))
