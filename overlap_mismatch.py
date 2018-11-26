@@ -1,4 +1,9 @@
 # coding=utf-8
+__author__ = "Declan Bennett"
+__email__ = "d.bennett1@nuigalway.ie"
+__version__ = "0.1"
+__status__ = "development"
+
 import os
 import re
 import sys
@@ -8,30 +13,6 @@ from collections import defaultdict
 import pysam
 
 strt = time.time()
-# All changes to devel branch please
-# Code to calculate mismatches to the reference genome in overlapping read-pairs. This Version differs from the
-# initial implementation that used random access to get the mate pair. I am now hashing the reads until its mate is
-# found. This is substantially faster and allows for the analysis of biobank scale datasets
-
-
-# Also need to write an implementation of Lawrence Etwillers DNA damage estimator. this basically just looks for
-# reverse complement agreement in the read2 read. # Need to think about this more i,e does the position of the
-# substitution matter in the read or is it just we see more G->T in r1 and less C-A in R2 irrespective if they occur
-# at the same loci. I'n not convinced DNA damage will be that critical we are requiring the pair to agree on the
-# exact location of the mismatch # Also is there Bias in this as there is strand specific (Transcribed) asymmetry in
-# Exome data. Will test with WGS if there is data available with enough sequencing depth . have downloaded the "high
-# coverage" HG0096 WGS and currently testing to see any pronounced differences
-
-#  genome = pysam.Fastafile('/home/declan/phd/Homo_sapiens.GRCh37.dna.toplevel.fa.gz')
-# this can be used for getting +1-1 bases from reference fasta if choosing to not take from alignment sequence
-
-# # Will also need to derive a qc plan. WGS data for G1K doesnt have MD-Ztags Try to access samtools calmd function
-# which can compute md tag. Heng-li has talked about a new field (cs) which should be generally easy to parse. "MD
-# done right but too late"
-
-# #Current code now works to calculate exact GRCh37 co-ordinates Mon 29th Oct @23:49 #Have a filtering process set up
-# which removes variants with a VAF > 0.4 giving the benefit of doubt that .4 and up is a snp. (at some point store
-# these could be interesting)
 
 ###################### Files ###########
 BAM = sys.argv[1]  # input BAM,CRAM will need to check + index
@@ -72,7 +53,7 @@ print("Mapping Quality is {}\n".format(mp_q))
 # 		print("Hashing Done \n") # this works for the most part. I'm calling every read that covers each
 # 		"Mutation" when i calculate coverage. getting the fraction of covering reads that have the mutation
 # 		should be trivial to do but cost on timing
-
+#######################################################################################################################
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~
 # The Idea here is to write the hashed snps as a cPickle object. I have to check if this is feasable interms of
 # Snps.pkl size and if any substantial gain is seen in loading dict over reading file and writing to dict ~
@@ -83,7 +64,7 @@ print("Mapping Quality is {}\n".format(mp_q))
 # snp_loc = pickle.load( open( "Snps.pkl", "rb" ) )
 # print "Snps Loaded/n see"
 # print snp_loc
-##########################
+########################################################################################################################
 
 ## reverse complement not currently used will need it for strand asymmetry
 def reverse_complement(dna):
@@ -124,7 +105,10 @@ def read_r2_1st_overlap(pos, mpos, rlen, mlen, md1, md2):
 
 
 def ref_matches(align_type, idx, rcig, mcig, MDZ):  # remember to MDZ=MDZ1 etc
-    if align_type.isdigit() and 0 != int(align_type) and len(MDZ) - 1 != idx and 'D' not in str(rcig) and 'D' not in str(mcig) and 'I' not in str(rcig) and 'I' not in str(mcig) and 'H' not in str(mcig) and 'H' not in str(rcig) and 'S' not in str(mcig) and 'S' not in str(rcig):  # sub out matching bases and progress through read
+    if align_type.isdigit() and 0 != int(align_type) and len(MDZ) - 1 != idx and 'D' not in str(
+            rcig) and 'D' not in str(mcig) and 'I' not in str(rcig) and 'I' not in str(mcig) and 'H' not in str(
+            mcig) and 'H' not in str(rcig) and 'S' not in str(mcig) and 'S' not in str(
+            rcig):  # sub out matching bases and progress through read
         return True
     else:
         return False
@@ -138,23 +122,26 @@ def filter1(read, SAM, mp_q):
 
 
 def chk_cov_snp_ql(read, cov, m1_pos, read_pos, bs_q, rref, snp_loc):
-    if int(cov.pos) == int(m1_pos) and int(cov.n) >= cvg and read.query_qualities[(int(read_pos))] >= bs_q and (str(rref) + ":" + str(m1_pos)) not in snp_loc:  # and returns coverage for every base in reads also filtering out variants here (snp_loc)
+    if int(cov.pos) == int(m1_pos) and int(cov.n) >= cvg and read.query_qualities[(int(read_pos))] >= bs_q and (
+            str(rref) + ':' + str(
+            m1_pos)) not in snp_loc:  # and returns coverage for every base in reads also filtering out variants here (snp_loc)
         return True
     else:
         return False
 
 
 def ref_mismatches(align_type, nucs, rcig, mcig):
-    if align_type.isalpha() and align_type in nucs and len(align_type) == 1 and 'D' not in str(rcig) and 'D' not in str(mcig) and 'I' not in str(rcig) and 'I' not in str(mcig) and 'H' not in str(mcig) and 'H' not in str(rcig) and 'S' not in str(mcig) and 'S' not in str(rcig):
+    if align_type.isalpha() and align_type in nucs and len(align_type) == 1 and 'D' not in str(rcig) and 'D' not in str(
+            mcig) and 'I' not in str(rcig) and 'I' not in str(mcig) and 'H' not in str(mcig) and 'H' not in str(
+            rcig) and 'S' not in str(mcig) and 'S' not in str(rcig):
         return True
     else:
         return False
 
 
 def read_pair_generator(bam, region_string=None):
-
-# Generate read pairs in a BAM file or within a region string.
-# Reads are added to read_dict until a pair is found.
+    # Generate read pairs in a BAM file or within a region string.
+    # Reads are added to read_dict until a pair is found.
 
     read_dict = defaultdict(lambda: [None, None])
     for read in bam.fetch(region=region_string):
@@ -183,12 +170,12 @@ def read_pair_generator(bam, region_string=None):
 num_reads = 1499999  # progression output
 read_counts = 0
 
-name = BAM.split(".")[0]
+name = BAM.split('.')[0]
 if not os.path.exists(name):
     os.makedirs(name)
-print("Running get_overlaps to estimate mismatches for sample {}\n".format(name))
+print('Running get_overlaps to estimate mismatches for sample {}\n'.format(name))
 ovrlp_seq = 0
-with pysam.AlignmentFile(BAM, "rb") as SAM:
+with pysam.AlignmentFile(BAM, 'rb') as SAM:
     print("File {} opened".format(BAM))
     for read, read2 in read_pair_generator(SAM):
         if read is None or read2 is None:
@@ -198,11 +185,12 @@ with pysam.AlignmentFile(BAM, "rb") as SAM:
         mlen = read2.infer_query_length()  # read2 length
         rref = read.reference_name  #
         mpos = read2.pos
-        md1 = read.get_tag("MD")  # MD:z tag
-        md2 = read2.get_tag("MD")
+        md1 = read.get_tag('MD')  # MD:z tag
+        md2 = read2.get_tag('MD')
         rcig = read.cigarstring
         mcig = read2.cigarstring
-        MDZ1 = re.findall(r'[A-Za-z]|-?\d+\.\d+|\d+', md1)  # need to make sure that this works for indels that are not in cigar. ie move len(align_type)-1 in casee^AC indel THIS IS IMPORTANT NEEDS TO BE 100% CORRECT PLUS ROBUST TO EDGECASES. Pretty sure the middle clause is not required ? means before is optional so we know MD only returns integers. but it is currently working so come back later.
+        MDZ1 = re.findall(r'[A-Za-z]|-?\d+\.\d+|\d+',
+                          md1)  # need to make sure that this works for indels that are not in cigar. ie move len(align_type)-1 in casee^AC indel THIS IS IMPORTANT NEEDS TO BE 100% CORRECT PLUS ROBUST TO EDGECASES. Pretty sure the middle clause is not required ? means before is optional so we know MD only returns integers. but it is currently working so come back later.
         MDZ2 = re.findall(r'[A-Za-z]|-?\d+\.\d+|\d+', md2)
         if read_r1_1st_overlap(pos, mpos, rlen, mlen, md1, md2):
             ovrlp_seq = ovrlp_seq + (int(pos) + int(rlen) - int(mpos))
@@ -221,7 +209,7 @@ with pysam.AlignmentFile(BAM, "rb") as SAM:
                     mm_cnt = mm_cnt + 1  # mutation per read count
                     m1_pos = m1_pos + 1
                     mm_b = str(read.query_alignment_sequence)[read_pos]  # mismatching base
-                    m1_key = str(rref) + ":" + str(m1_pos)
+                    m1_key = str(rref) + ':' + str(m1_pos)
                     sub_dict[m1_key] = ref + mm_b
                     read_pos = read_pos + 1
             for idx2, align_type in enumerate(MDZ2):
@@ -233,14 +221,17 @@ with pysam.AlignmentFile(BAM, "rb") as SAM:
                     mm_cnt = mm_cnt + 1
                     m2_pos = m2_pos + 1
                     rmm_b = str(read2.query_alignment_sequence)[read2_pos]  # mismatching base
-                    for cov in SAM.pileup(str(rref), int(m2_pos), int(m2_pos) + 1):  # this seems to be quite slow as it pulls all the reads containing this position
+                    for cov in SAM.pileup(str(rref), int(m2_pos), int(
+                            m2_pos) + 1):  # this seems to be quite slow as it pulls all the reads containing this position
                         if chk_cov_snp_ql(read2, cov, m2_pos, read2_pos, bs_q, rref, snp_loc):
-                            nucl = [pileupread.alignment.query_sequence[pileupread.query_position] for pileupread in cov.pileups if m2_pos == cov.n]
-                            m2_key = str(rref) + ":" + str(m2_pos)
+                            nucl = [pileupread.alignment.query_sequence[pileupread.query_position] for pileupread in
+                                    cov.pileups if m2_pos == cov.n]
+                            m2_key = str(rref) + ':' + str(m2_pos)
                             sub_dict_read2[m2_key] = ref + rmm_b
                         else:
                             continue
-                        if m2_key in sub_dict and m2_key in sub_dict_read2 and sub_dict[m2_key] == sub_dict_read2[m2_key]:
+                        if m2_key in sub_dict and m2_key in sub_dict_read2 and sub_dict[m2_key] == sub_dict_read2[
+                            m2_key]:
                             mismatch[m2_key] = ref + rmm_b
                             count = 2
                             depth = int(cov.n)
@@ -248,7 +239,6 @@ with pysam.AlignmentFile(BAM, "rb") as SAM:
                                 if not pileupread.is_del and not pileupread.is_refskip and m2_pos == cov.n and not pileupread.indel and rmm_b == \
                                         pileupread.alignment.query_sequence[pileupread.query_position] and \
                                         pileupread.alignment.query_sequence[pileupread.query_position] != ref:
-                                    #       print ref,alt,pileupread.alignment.query_sequence[pileupread.query_position]
                                     count += 1
                                 if 0 < float(float(count) / float(depth)) < 0.4:
                                     if float(float(count) / float(depth)) > 1:
@@ -274,7 +264,7 @@ with pysam.AlignmentFile(BAM, "rb") as SAM:
                     mm_cnt = mm_cnt + 1  # mutation per read count
                     m1_pos = m1_pos + 1
                     mm_b = str(read.query_alignment_sequence)[read_pos]  # mismatching base
-                    m1_key = str(rref) + ":" + str(m1_pos)
+                    m1_key = str(rref) + ':' + str(m1_pos)
                     sub_dict[m1_key] = ref + mm_b
                     read_pos = read_pos + 1
 
@@ -287,15 +277,18 @@ with pysam.AlignmentFile(BAM, "rb") as SAM:
                     mm_cnt = mm_cnt + 1
                     m2_pos = m2_pos + 1
                     rmm_b = str(read2.query_alignment_sequence)[read2_pos]  # mismatching base
-                    for cov in SAM.pileup(str(rref), int(m2_pos) - 1, int(m2_pos)):  # this seems to be quite slow as it pulls all the reads containing this position
+                    for cov in SAM.pileup(str(rref), int(m2_pos) - 1, int(
+                            m2_pos)):  # this seems to be quite slow as it pulls all the reads containing this position
                         if chk_cov_snp_ql(read2, cov, m2_pos, read2_pos, bs_q, rref, snp_loc):
-                            nucl = [pileupread.alignment.query_sequence[pileupread.query_position] for pileupread in cov.pileups if m2_pos == cov.n]
-                            m2_key = str(rref) + ":" + str(m2_pos)
+                            nucl = [pileupread.alignment.query_sequence[pileupread.query_position] for pileupread in
+                                    cov.pileups if m2_pos == cov.n]
+                            m2_key = str(rref) + ':' + str(m2_pos)
                             sub_dict_read2[m2_key] = ref + rmm_b
                         else:
                             continue
 
-                        if m2_key in sub_dict and m2_key in sub_dict_read2 and sub_dict[m2_key] == sub_dict_read2[m2_key]:
+                        if m2_key in sub_dict and m2_key in sub_dict_read2 and sub_dict[m2_key] == sub_dict_read2[
+                            m2_key]:
                             mismatch[m2_key] = ref + rmm_b
                             count = 2
                             depth = int(cov.n)
@@ -320,27 +313,27 @@ with pysam.AlignmentFile(BAM, "rb") as SAM:
         read_counts = read_counts + 1
 
         if int(read_counts) > int(num_reads):
-            print("Number of paired reads processed that satisfy thresholds is {} ".format(read_counts), end="\r")
+            print('Number of paired reads processed that satisfy thresholds is {} '.format(read_counts), end="\r")
             sys.stdout.flush()
             num_reads += 1500000
 
-print("Writing mutations to file \n")
-with open(name + "/" + name + "_substitutions.out", "w") as out:
+print('Writing mutations to file \n')
+with open(name + '/' + name + '_substitutions.out', 'w') as out:
     for key, value in tmismatch.items():
-        outstring = str(key) + "\t" + str(value) + "\n"
+        outstring = str(key) + '\t' + str(value) + '\n'
         out.write(outstring)
 
-print("Calculating Mutation counts where Pair agree \n")
-with open(name + "/" + name + "_sub_counts.out", "w") as cnts:
+print('Calculating Mutation counts where Pair agree \n')
+with open(name + '/' + name + '_sub_counts.out', 'w') as cnts:
     subs = Counter(tmismatch.values())
-    cnts.write("Sub Count Overlap\n")
+    cnts.write('Sub Count Overlap\n')
     for key, value in subs.items():
-        out = str(key) + " " + str(value) + " " + str(ovrlp_seq) + "\n"
+        out = str(key) + ' ' + str(value) + ' ' + str(ovrlp_seq) + '\n'
         cnts.write(out)
 
-print("making VCF for {}".format(name))
-with open(name + "/" + name + "_substitutions.out", "r") as IN:
-    with open(name + "/" + name + ".vcf", "w") as out:
+print('making VCF for {}'.format(name))
+with open(name + '/' + name + '_substitutions.out', 'r') as IN:
+    with open(name + '/' + name + '.vcf', 'w') as out:
         out.write(
             '##fileformat=VCFv4.0\n##contig=<ID=1,assembly=b37,length=249250621>\n##contig=<ID=2,assembly=b37,'
             'length=243199373>\n##contig=<ID=3,assembly=b37,length=198022430>\n##contig=<ID=4,assembly=b37,'
@@ -388,14 +381,14 @@ with open(name + "/" + name + "_substitutions.out", "r") as IN:
             'assembly=b37,length=39786>\n##contig=<ID=GL000249.1,assembly=b37,length=38502>\n##contig=<ID=MT,'
             'assembly=b37,length=16569>\n##contig=<ID=NC_007605,assembly=b37,length=171823>\n##contig=<ID=X,'
             'assembly=b37,length=155270560>\n##contig=<ID=Y,assembly=b37,length=59373566>\n##contig=<ID=hs37d5,'
-            'assembly=b37,length=35477943>\n#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t{}\n'.format(name))
+            'assembly=b37,length=35477943>\n#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t{}\n'.format(name)) # move to new file
         for line in IN:
             fields = line.strip().split()
             ref = list(fields[1])[0]
             mut = list(fields[1])[1]
-            location = fields[0].strip().split(":")
-            out_str = location[0] + "\t" + location[1] + "\t" + fields[
-                0] + "\t" + ref + "\t" + mut + "\t.\t.\t.\t.\t1/0\n"
+            location = fields[0].strip().split(':')
+            out_str = location[0] + '\t' + location[1] + "\t" + fields[
+                0] + '\t' + ref + '\t' + mut + '\t.\t.\t.\t.\t1/0\n'
             out.write(out_str)
 tme = (time.time() - strt) / 3600
 print('overlap_mismatch has completed. The number of overlapping bases is {}\n \
