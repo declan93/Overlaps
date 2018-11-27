@@ -36,9 +36,9 @@ mp_q = 60  # read mapping quality
 ################################
 
 ###########################
-print("Base Quality Threshold is {}".format(bs_q))
-print("Putative Mutation Sequencing Depth Threshold is {}".format(cvg))
-print("Mapping Quality is {}\n".format(mp_q))
+print(f'Base Quality Threshold is {bs_q}')
+print(f'Putative Mutation Sequencing Depth Threshold is {cvg}')
+print(f'Mapping Quality is {mp_q}\n')
 
 ###########################
 
@@ -53,9 +53,9 @@ print("Mapping Quality is {}\n".format(mp_q))
 # 		should be trivial to do but cost on timing
 #######################################################################################################################
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~
-# The Idea here is to write the hashed snps as a cPickle object. I have to check if this is feasable interms of
+# The Idea here is to write the hashed snps as a cPickle object. I have to check if this is feasible in terms of
 # Snps.pkl size and if any substantial gain is seen in loading dict over reading file and writing to dict ~
-# Any small gain will be translated over the full dataset so will be useful 1 second quicker saves 40 mins cpu
+# Any small gain will be translated over the full data set so will be useful 1 second quicker saves 40 mins cpu
 # time on G1K data
 
 # print "Loading Known Snps"
@@ -156,13 +156,13 @@ def read_pair_generator(bam, region_string=None):
 
 #######
 
-num_reads = 1499999  # progression output
+num_reads = 1999999  # progression output
 read_counts = 0
 name = BAM.split('.')[0]
 
 if not os.path.exists(name):
     os.makedirs(name)
-print('Running get_overlaps to estimate mismatches for sample {}\n'.format(name))
+print(f'Running get_overlaps to estimate mismatches for sample {name}\n')
 ovrlp_seq = 0
 
 with pysam.AlignmentFile(BAM, 'rb') as SAM:
@@ -236,6 +236,7 @@ with pysam.AlignmentFile(BAM, 'rb') as SAM:
                                     else:
                                         tmismatch[m2_key] = ref + rmm_b
                             del mismatch[m2_key]
+                    read2_pos += 1
 
         elif read_r2_1st_overlap(pos, mpos, rlen, mlen, md1, md2):
             ovrlp_seq = ovrlp_seq + (int(mpos) + int(mlen) - int(pos))
@@ -294,7 +295,7 @@ with pysam.AlignmentFile(BAM, 'rb') as SAM:
                                     else:
                                         tmismatch[m2_key] = ref + rmm_b
                             del mismatch[m2_key]
-                        read2_pos += 1
+                    read2_pos += 1
             else:
                 continue
 
@@ -303,17 +304,19 @@ with pysam.AlignmentFile(BAM, 'rb') as SAM:
         read_counts = read_counts + 1
 
         if int(read_counts) > int(num_reads):
-            print('Number of paired reads processed that satisfy thresholds is {} '.format(read_counts), end="\r")
+            print(f'Number of paired reads processed that satisfy thresholds is {read_counts} ', end="\r")
             sys.stdout.flush()
-            num_reads += 1500000
+            num_reads += 2000000
 
 print('Writing mutations to file \n')
+
 with open(name + '/' + name + '_substitutions.out', 'w') as out:
     for key, value in tmismatch.items():
         outstring = str(key) + '\t' + str(value) + '\n'
         out.write(outstring)
 
 print('Calculating Mutation counts where Pair agree \n')
+
 with open(name + '/' + name + '_sub_counts.out', 'w') as cnts:
     subs = Counter(tmismatch.values())
     cnts.write('Sub Count Overlap\n')
@@ -321,7 +324,8 @@ with open(name + '/' + name + '_sub_counts.out', 'w') as cnts:
         out = str(key) + ' ' + str(value) + ' ' + str(ovrlp_seq) + '\n'
         cnts.write(out)
 
-print('making VCF for {}'.format(name))
+print(f'making VCF for {name}')
+
 with open(name + '/' + name + '_substitutions.out', 'r') as IN:
     with open(name + '/' + name + '.vcf', 'w') as out:
         out.write(
@@ -381,6 +385,7 @@ with open(name + '/' + name + '_substitutions.out', 'r') as IN:
                 0] + '\t' + ref + '\t' + mut + '\t.\t.\t.\t.\t1/0\n'
             out.write(out_str)
 tme = (time.time() - strt) / 3600
-print('overlap_mismatch has completed. The number of overlapping bases is {}\n \
-    The number of putative mismatches is {}\n \
-	The time taking to analyse {} was {} hrs'.format(ovrlp_seq, sum(subs.values()), name, tme))
+
+print(f'overlap_mismatch has completed. The number of overlapping bases is {ovrlp_seq}\n \
+    The number of putative mismatches is {sum(subs.values())}\n \
+	The time taking to analyse {name} was {tme} hrs')
