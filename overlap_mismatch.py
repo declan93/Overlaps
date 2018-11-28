@@ -158,7 +158,7 @@ def read_pair_generator(bam, region_string=None):
 
 num_reads = 1999999  # progression output
 read_counts = 0
-name = BAM.split('.')[0]
+name = BAM.split('.')[0].split('/')[-1]
 
 if not os.path.exists(name):
     os.makedirs(name)
