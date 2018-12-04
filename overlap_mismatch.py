@@ -375,7 +375,7 @@ with open(name + '/' + name + '_substitutions.out', 'r') as IN:
             'assembly=b37,length=39786>\n##contig=<ID=GL000249.1,assembly=b37,length=38502>\n##contig=<ID=MT,'
             'assembly=b37,length=16569>\n##contig=<ID=NC_007605,assembly=b37,length=171823>\n##contig=<ID=X,'
             'assembly=b37,length=155270560>\n##contig=<ID=Y,assembly=b37,length=59373566>\n##contig=<ID=hs37d5,'
-            'assembly=b37,length=35477943>\n#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t{}\n'.format(name)) # move to new file
+            'assembly=b37,length=35477943>\n#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t{}\n'.format(name)) # move to new file hash headers and only write headers that have mutations
         for line in IN:
             fields = line.strip().split()
             ref = list(fields[1])[0]
