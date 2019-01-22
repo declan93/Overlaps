@@ -166,7 +166,7 @@ print(f'Running get_overlaps to estimate mismatches for sample {name}\n')
 ovrlp_seq = 0
 
 with pysam.AlignmentFile(BAM, 'rb') as SAM:
-    print("File {} opened".format(BAM))
+    print(f'File {BAM} opened')
     for read, read2 in read_pair_generator(SAM):
         if read is None or read2 is None:
             continue
@@ -183,7 +183,7 @@ with pysam.AlignmentFile(BAM, 'rb') as SAM:
                           md1)  # need to make sure that this works for indels that are not in cigar. ie move len(align_type)-1 in casee^AC indel THIS IS IMPORTANT NEEDS TO BE 100% CORRECT PLUS ROBUST TO EDGECASES. Pretty sure the middle clause is not required ? means before is optional so we know MD only returns integers. but it is currently working so come back later.
         MDZ2 = re.findall(r'[A-Za-z]|-?\d+\.\d+|\d+', md2)
         if read_r1_1st_overlap(pos, mpos, rlen, mlen, md1, md2):
-            ovrlp_seq = ovrlp_seq + (int(pos) + int(rlen) - int(mpos))
+            ovrlp_seq += (int(pos) + int(rlen) - int(mpos))
             mm_cnt = 0
             read_pos = 0  # used to catch substitution position
             read2_pos = 0
@@ -239,7 +239,7 @@ with pysam.AlignmentFile(BAM, 'rb') as SAM:
                     read2_pos += 1
 
         elif read_r2_1st_overlap(pos, mpos, rlen, mlen, md1, md2):
-            ovrlp_seq = ovrlp_seq + (int(mpos) + int(mlen) - int(pos))
+            ovrlp_seq += (int(mpos) + int(mlen) - int(pos))
             mm_cnt = 0
             read_pos = 0  # used to catch substitution position
             read2_pos = 0
