@@ -1,4 +1,4 @@
-All changes to devel branch please
+All changes to devel branch
 
 Python script to calculate mismatches to reference genome where overlapping portions of paired-end data agree
 
@@ -6,11 +6,10 @@ Code to calculate mismatches to the reference genome in overlapping read-pairs. 
 initial implementation that used random access to get the mate pair. I am now hashing the reads until its mate is
 found. This is substantially faster and allows for the analysis of biobank scale datasets
 
-
-Also need to write an implementation of Lawrence Etwillers DNA damage estimator. this basically just looks for
+Also need to write an implementation of Lawrence Etwillers DNA damage estimator. This basically just looks for
 reverse complement agreement in the read2 read. # Need to think about this more i,e does the position of the
 substitution matter in the read or is it just we see more G->T in r1 and less C-A in R2 irrespective if they occur
-at the same loci. I'n not convinced DNA damage will be that critical we are requiring the pair to agree on the
+at the same loci. I'm not convinced DNA damage will be that critical we are requiring the pair to agree on the
 exact location of the mismatch # Also is there Bias in this as there is strand specific (Transcribed) asymmetry in
 Exome data. Will test with WGS if there is data available with enough sequencing depth . have downloaded the "high
 coverage" HG0096 WGS and currently testing to see any pronounced differences
@@ -23,5 +22,8 @@ which can compute md tag. Heng-li has talked about a new field (cs) which should
 done right but too late"
 
 Current code now works to calculate exact GRCh37 co-ordinates Mon 29th Oct @23:49 #Have a filtering process set up
-which removes variants with a VAF > 0.4 giving the benefit of doubt that .4 and up is a snp. (at some point store
-these could be interesting)
+which removes variants with a VAF > 0.4 giving the benefit of doubt that .4 and up is a snp. This is not conservative and increases the false positive (at some point store
+these could be interesting).
+
+Need to speed up pileup to calculate total coverage and coverage that satisfies BASQ, MAPQ  thresholds.
+

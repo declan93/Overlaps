@@ -166,7 +166,7 @@ print(f'Running get_overlaps to estimate mismatches for sample {name}\n')
 ovrlp_seq = 0
 
 with pysam.AlignmentFile(BAM, 'rb') as SAM:
-    print("File {} opened".format(BAM))
+    print(f'File {BAM} opened')
     for read, read2 in read_pair_generator(SAM):
         if read is None or read2 is None:
             continue
@@ -183,7 +183,7 @@ with pysam.AlignmentFile(BAM, 'rb') as SAM:
                           md1)  # need to make sure that this works for indels that are not in cigar. ie move len(align_type)-1 in casee^AC indel THIS IS IMPORTANT NEEDS TO BE 100% CORRECT PLUS ROBUST TO EDGECASES. Pretty sure the middle clause is not required ? means before is optional so we know MD only returns integers. but it is currently working so come back later.
         MDZ2 = re.findall(r'[A-Za-z]|-?\d+\.\d+|\d+', md2)
         if read_r1_1st_overlap(pos, mpos, rlen, mlen, md1, md2):
-            ovrlp_seq = ovrlp_seq + (int(pos) + int(rlen) - int(mpos))
+            ovrlp_seq += (int(pos) + int(rlen) - int(mpos))
             mm_cnt = 0
             read_pos = 0  # used to catch substitution position
             read2_pos = 0
@@ -239,7 +239,7 @@ with pysam.AlignmentFile(BAM, 'rb') as SAM:
                     read2_pos += 1
 
         elif read_r2_1st_overlap(pos, mpos, rlen, mlen, md1, md2):
-            ovrlp_seq = ovrlp_seq + (int(mpos) + int(mlen) - int(pos))
+            ovrlp_seq += (int(mpos) + int(mlen) - int(pos))
             mm_cnt = 0
             read_pos = 0  # used to catch substitution position
             read2_pos = 0
@@ -375,7 +375,7 @@ with open(name + '/' + name + '_substitutions.out', 'r') as IN:
             'assembly=b37,length=39786>\n##contig=<ID=GL000249.1,assembly=b37,length=38502>\n##contig=<ID=MT,'
             'assembly=b37,length=16569>\n##contig=<ID=NC_007605,assembly=b37,length=171823>\n##contig=<ID=X,'
             'assembly=b37,length=155270560>\n##contig=<ID=Y,assembly=b37,length=59373566>\n##contig=<ID=hs37d5,'
-            'assembly=b37,length=35477943>\n#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t{}\n'.format(name)) # move to new file
+            'assembly=b37,length=35477943>\n#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t{}\n'.format(name)) # move to new file hash headers and only write headers that have mutations
         for line in IN:
             fields = line.strip().split()
             ref = list(fields[1])[0]
