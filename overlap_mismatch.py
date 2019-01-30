@@ -193,6 +193,7 @@ with pysam.AlignmentFile(BAM, 'rb') as SAM:
             read2_pos = 0
             m1_pos = int(pos)
             m2_pos = int(mpos)
+            ##todo hash overlapping reads with positions and qualities this way we can tell if a read has multiple overlapping posiions also take read_pos as I want to see where in the reads are we seeing the mismatches.
             for idx, align_type in enumerate(MDZ1):
                 if ref_matches(align_type, idx, rcig, mcig, MDZ1, check_cigar):
                     read_pos = read_pos + int(align_type)
@@ -282,7 +283,7 @@ with pysam.AlignmentFile(BAM, 'rb') as SAM:
         for line in snps:
             if line.strip() in mismatch:
                 del mismatch[line.strip()]
-
+##todo Tidy this into functions
     for key, value in mismatch.items():
         fields = key.strip().split(':')
         for cov in SAM.pileup(str(fields[0]), int(fields[1]) - 1, int(fields[1]), min_base_quality=0):
