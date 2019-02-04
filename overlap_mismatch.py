@@ -30,15 +30,16 @@ mismatch = {}
 tmismatch = {}
 mm_quals = defaultdict(list)
 m_quals = defaultdict(list)
+overlap_names = defaultdict(list)
 
 # Thresholds #####
-bs_q = 1  # base quality thrshold
+bs_q = 30  # base quality thrshold
 cvg = 1  # 'coverage
 mp_q = 60  # read mapping quality
 
-print(f'Base Quality Threshold is {bs_q}')
-print(f'Putative Mutation Sequencing Depth Threshold is {cvg}')
-print(f'Mapping Quality is {mp_q}\n')
+print(f'Base Quality Threshold is {bs_q}',flush=True)
+print(f'Putative Mutation Sequencing Depth Threshold is {cvg},',flush=True)
+print(f'Mapping Quality is {mp_q}\n',flush=True)
 
 
 # reverse complement not currently used will need it for strand asymmetry
@@ -155,17 +156,17 @@ def read_pair_generator(bam, region_string=None):
 
 #######
 
-num_reads = 1999999  # progression output
+num_reads = 999999 # progression output
 read_counts = 0
 name = BAM.split('.')[0].split('/')[-1]
 print(name)
 if not os.path.exists(name):
     os.makedirs(name)
-print(f'Running get_overlaps to estimate mismatches for sample {name}\n')
+print(f'Running get_overlaps to estimate mismatches for sample {name}\n',flush=True)
 ovrlp_seq = 0
 
 with pysam.AlignmentFile(BAM, 'rb') as SAM:
-    print(f'File {BAM} opened')
+    print(f'File {BAM} opened',flush=True)
     for read, read2 in read_pair_generator(SAM):
         if read is None or read2 is None:
             continue
@@ -193,7 +194,9 @@ with pysam.AlignmentFile(BAM, 'rb') as SAM:
             read2_pos = 0
             m1_pos = int(pos)
             m2_pos = int(mpos)
+            ##todo hash overlapping reads with positions and qualities this way we can tell if a read has multiple overlapping posiions also take read_pos as I want to see where in the reads are we seeing the mismatches.
             for idx, align_type in enumerate(MDZ1):
+                rmm_q = 0
                 if ref_matches(align_type, idx, rcig, mcig, MDZ1, check_cigar):
                     read_pos = read_pos + int(align_type)
                     m1_pos = int(m1_pos) + int(align_type)
@@ -204,12 +207,14 @@ with pysam.AlignmentFile(BAM, 'rb') as SAM:
                     mm_cnt = mm_cnt + 1  # mutation per read count
                     m1_pos = m1_pos + 1
                     mm_b = str(read.query_alignment_sequence)[read_pos]  # mismatching base
+                    rmm_q = read.query_qualities[read_pos]
                     m1_key = str(rref) + ':' + str(m1_pos)
-                    sub_dict[m1_key] = ref + mm_b
+                    if int(rmm_q) >= bs_q:
+                        sub_dict[m1_key] = ref + mm_b
                     read_pos += 1
-                else:
-                    read_pos += 0
+
             for idx2, align_type in enumerate(MDZ2):
+                rmm_q = 0
                 if ref_matches(align_type, idx2, rcig, mcig, MDZ2, check_cigar):
                     read2_pos = read2_pos + int(align_type)
                     m2_pos = int(m2_pos) + int(align_type)
@@ -218,15 +223,19 @@ with pysam.AlignmentFile(BAM, 'rb') as SAM:
                     mm_cnt = mm_cnt + 1
                     m2_pos = m2_pos + 1
                     rmm_b = str(read2.query_alignment_sequence)[read2_pos]  # mismatching base
+                    rmm_q = read2.query_qualities[read2_pos]
                     m2_key = str(rref) + ':' + str(m2_pos)  # + ':' + read2.query_name
-                    sub_dict_read2[m2_key] = ref + rmm_b
+                    if int(rmm_q) >= bs_q:
+                        sub_dict_read2[m2_key] = ref + rmm_b
                     if m2_key in sub_dict and m2_key in sub_dict_read2 and sub_dict[m2_key] == \
                             sub_dict_read2[m2_key]:  # and not m2_key in snp_loc:
                         mismatch[m2_key] = ref + rmm_b
-
+                        if m2_key in overlap_names.keys():
+                            overlap_names[m2_key].append(str(ref+rmm_b))
+                            overlap_names[m2_key].append(read.query_name)
+                        else:
+                            overlap_names[m2_key] = [(ref+rmm_b), read.query_name]
                     read2_pos += 1
-                else:
-                    read2_pos += 0
             sub_dict = {}
             sub_dict_read2 = {}
 
@@ -239,6 +248,7 @@ with pysam.AlignmentFile(BAM, 'rb') as SAM:
             m2_pos = int(mpos)
 
             for idx3, align_type in enumerate(MDZ1):
+                rmm_q = 0
                 if ref_matches(align_type, idx3, rcig, mcig, MDZ1, check_cigar):
                     read_pos = read_pos + int(align_type)
                     m1_pos = int(m1_pos) + int(align_type)
@@ -248,11 +258,14 @@ with pysam.AlignmentFile(BAM, 'rb') as SAM:
                     mm_cnt = mm_cnt + 1  # mutation per read count
                     m1_pos = m1_pos + 1
                     mm_b = str(read.query_alignment_sequence)[read_pos]  # mismatching base
+                    rmm_q = read.query_qualities[read_pos]
                     m1_key = str(rref) + ':' + str(m1_pos)  # + ':' + read.query_name
-                    sub_dict[m1_key] = ref + mm_b
+                    if int(rmm_q) >= bs_q:
+                        sub_dict[m1_key] = ref + mm_b
                     read_pos += 1
 
             for idx4, align_type in enumerate(MDZ2):
+                rmm_q = 0
                 if ref_matches(align_type, idx4, rcig, mcig, MDZ2, check_cigar):
                     read2_pos = read2_pos + int(align_type)
                     m2_pos = int(m2_pos) + int(align_type)
@@ -261,11 +274,18 @@ with pysam.AlignmentFile(BAM, 'rb') as SAM:
                     mm_cnt = mm_cnt + 1
                     m2_pos = m2_pos + 1
                     rmm_b = str(read2.query_alignment_sequence)[read2_pos]  # mismatching base
+                    rmm_q = read2.query_qualities[read2_pos]
                     m2_key = str(rref) + ':' + str(m2_pos)  # + ':' + read2.query_name
-                    sub_dict_read2[m2_key] = ref + rmm_b
+                    if int(rmm_q) >= bs_q:
+                        sub_dict_read2[m2_key] = ref + rmm_b
                     if m2_key in sub_dict and m2_key in sub_dict_read2 and sub_dict[m2_key] == \
                             sub_dict_read2[m2_key]:  # and not m2_key in snp_loc:
                         mismatch[m2_key] = ref + rmm_b
+                        if m2_key in overlap_names.keys():
+                            overlap_names[m2_key].append(str(ref+rmm_b))
+                            overlap_names[m2_key].append(read.query_name)
+                        else:
+                            overlap_names[m2_key] = [(ref+rmm_b), read.query_name]
                     read2_pos += 1
             sub_dict = {}
             sub_dict_read2 = {}
@@ -274,27 +294,25 @@ with pysam.AlignmentFile(BAM, 'rb') as SAM:
     read_counts = read_counts + 1
 
     if int(read_counts) > int(num_reads):
-        print(f'Number of paired reads processed that satisfy thresholds is {read_counts} ', end="\r")
-        sys.stdout.flush()
-        num_reads += 2000000
+        print(f'Number of paired reads processed that satisfy thresholds is {read_counts} ', end="\r",flush=True)
+        num_reads += 1000000
 
     with open(SNP, "r") as snps:
         for line in snps:
             if line.strip() in mismatch:
                 del mismatch[line.strip()]
-
+                del overlap_names[line.strip()]
+##todo Tidy this into functions
     for key, value in mismatch.items():
         fields = key.strip().split(':')
-        for cov in SAM.pileup(str(fields[0]), int(fields[1]) - 1, int(fields[1]), min_base_quality=0):
+        for cov in SAM.pileup(str(fields[0]), int(fields[1]) - 1, int(fields[1]), ignore_overlaps=False, stepper='nofilter', nofilter=True): # min_base_quality=0, nofilter=True):
             if int(cov.pos) == int(fields[1]):
                 for pileupread in cov.pileups:
-                    if check_cigar(cig_g, pileupread.alignment.cigarstring) == True:
-                        continue
-
+                    #if check_cigar(cig_g, pileupread.alignment.cigarstring) == True:
+                     #   continue
                     if not pileupread.is_del and not pileupread.is_refskip:  # and pileupread.alignment.mapq >= 50:
                         if int(fields[1]) == int(pileupread.alignment.pos + pileupread.query_position):
                             if pileupread.alignment.query_sequence[pileupread.query_position - 1] == value[1]:
-
                                 if key in mm_quals.keys():
                                     mm_quals[key].append(
                                         pileupread.alignment.query_qualities[pileupread.query_position - 1])
@@ -313,8 +331,7 @@ with pysam.AlignmentFile(BAM, 'rb') as SAM:
                                 continue
             else:
                 continue
-
-print('Writing mutations to file \n')
+print('Writing mutations to file \n',flush=True)
 with open(name + '/' + name + '_substitutions.out', 'w') as out:
     out.write('pos\tref_alt\tmismatching_qualities\tmatching_qualities\n')
     for key, value in mismatch.items():
@@ -322,7 +339,7 @@ with open(name + '/' + name + '_substitutions.out', 'w') as out:
             [str(y) for y in m_quals[key]]) + '\n'
         out.write(outstring)
 
-print('Calculating Mutation counts where Pair agree \n')
+print('Calculating Mutation counts where Pair agree \n',flush=True)
 
 with open(name + '/' + name + '_sub_counts.out', 'w') as cnts:
     subs = Counter(mismatch.values())
@@ -331,7 +348,7 @@ with open(name + '/' + name + '_sub_counts.out', 'w') as cnts:
         out = str(key) + ' ' + str(value) + ' ' + str(ovrlp_seq) + '\n'
         cnts.write(out)
 
-print(f'making VCF for {name}')
+print(f'making VCF for {name}',flush=True)
 
 with open(name + '/' + name + '_substitutions.out', 'r') as IN:
     next(IN)
@@ -383,17 +400,18 @@ with open(name + '/' + name + '_substitutions.out', 'r') as IN:
             'assembly=b37,length=39786>\n##contig=<ID=GL000249.1,assembly=b37,length=38502>\n##contig=<ID=MT,'
             'assembly=b37,length=16569>\n##contig=<ID=NC_007605,assembly=b37,length=171823>\n##contig=<ID=X,'
             'assembly=b37,length=155270560>\n##contig=<ID=Y,assembly=b37,length=59373566>\n##contig=<ID=hs37d5,'
-            'assembly=b37,length=35477943>\n#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t{}\n'.format(name))
+            'assembly=b37,length=35477943>\n##FORMAT=<ID=DP,Number=1,Type=Integer,Description="Read Depth">\n'
+            '##FORMAT=<ID=AC,Number=1,Type=Integer,Description="Nonrefernece Count">\n#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t{}\n'.format(name))
         # move to new file hash headers and only write headers that have mutations
         for line in IN:
             fields = line.strip().split()
             ref = list(fields[1])[0]
             mut = list(fields[1])[1]
             location = fields[0].strip().split(':')
+            key = mm_quals[fields[0]][0]
             out_str = location[0] + '\t' + location[1] + "\t" + fields[
-                0] + '\t' + ref + '\t' + mut + '\t.\t.\t.\t.\t1/0\n'
+                0] + '\t' + ref + '\t' + mut + f'\t.\t.\tDP={key};AC={len(mm_quals[fields[0]])-1}\tGT\t1/0\n'
             out.write(out_str)
 tme = (time.time() - strt) / 3600
 
-print(f'overlap_mismatch has completed. The number of overlapping bases is {ovrlp_seq}\nThe number of putative '
-      f'mismatches is {sum(subs.values())}\nThe time taking to analyse {name} was {tme} hrs')
+print(f'overlap_mismatch has completed. The number of overlapping bases is {ovrlp_seq}\nThe number of putative mismatches is {sum(subs.values())}\nThe time taking to analyse {name} was {tme} hrs',flush=True)
