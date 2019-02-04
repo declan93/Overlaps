@@ -22,12 +22,10 @@ SNP = sys.argv[2]  # Known polymorphs maybe revisit this with maf ~1-2%? should 
 # ##############
 
 nucs = {'A', 'C', 'G', 'T'}  #
-homo = {'AA', 'CC', 'GG', 'TT'}  # Can be removed was used to flag mistakes in getting mutated nucleotide.
 snp_loc = defaultdict(int)
 sub_dict = {}  # This needs to be emptied after every pair processed
 sub_dict_read2 = {}  # This also needs to be emptied
 mismatch = {}
-tmismatch = {}
 mm_quals = defaultdict(list)
 m_quals = defaultdict(list)
 overlap_names = defaultdict(list)
@@ -37,9 +35,9 @@ bs_q = 30  # base quality thrshold
 cvg = 1  # 'coverage
 mp_q = 60  # read mapping quality
 
-print(f'Base Quality Threshold is {bs_q}',flush=True)
-print(f'Putative Mutation Sequencing Depth Threshold is {cvg},',flush=True)
-print(f'Mapping Quality is {mp_q}\n',flush=True)
+print(f'Base Quality Threshold is {bs_q}', flush=True)
+print(f'Putative Mutation Sequencing Depth Threshold is {cvg}', flush=True)
+print(f'Mapping Quality is {mp_q}\n', flush=True)
 
 
 # reverse complement not currently used will need it for strand asymmetry
@@ -158,12 +156,17 @@ def read_pair_generator(bam, region_string=None):
 
 num_reads = 999999 # progression output
 read_counts = 0
-name = BAM.split('.')[0].split('/')[-1]
-print(name)
+ovrlp_seq = 0
+
+name = BAM.split('.')[0].split('/')[-1]  # for files with absolute paths. files should be named sample_name.bam
+
+
 if not os.path.exists(name):
     os.makedirs(name)
-print(f'Running get_overlaps to estimate mismatches for sample {name}\n',flush=True)
-ovrlp_seq = 0
+
+
+print(f'Running get_overlaps to estimate mismatches for sample {name}\n', flush=True)
+
 
 with pysam.AlignmentFile(BAM, 'rb') as SAM:
     print(f'File {BAM} opened',flush=True)
@@ -310,7 +313,7 @@ with pysam.AlignmentFile(BAM, 'rb') as SAM:
                 for pileupread in cov.pileups:
                     #if check_cigar(cig_g, pileupread.alignment.cigarstring) == True:
                      #   continue
-                    if not pileupread.is_del and not pileupread.is_refskip:  # and pileupread.alignment.mapq >= 50:
+                    if not pileupread.is_del and not pileupread.is_refskip and pileupread.alignment.mapq >= mp_q:
                         if int(fields[1]) == int(pileupread.alignment.pos + pileupread.query_position):
                             if pileupread.alignment.query_sequence[pileupread.query_position - 1] == value[1]:
                                 if key in mm_quals.keys():
@@ -331,7 +334,9 @@ with pysam.AlignmentFile(BAM, 'rb') as SAM:
                                 continue
             else:
                 continue
+
 print('Writing mutations to file \n',flush=True)
+
 with open(name + '/' + name + '_substitutions.out', 'w') as out:
     out.write('pos\tref_alt\tmismatching_qualities\tmatching_qualities\n')
     for key, value in mismatch.items():
@@ -401,7 +406,9 @@ with open(name + '/' + name + '_substitutions.out', 'r') as IN:
             'assembly=b37,length=16569>\n##contig=<ID=NC_007605,assembly=b37,length=171823>\n##contig=<ID=X,'
             'assembly=b37,length=155270560>\n##contig=<ID=Y,assembly=b37,length=59373566>\n##contig=<ID=hs37d5,'
             'assembly=b37,length=35477943>\n##FORMAT=<ID=DP,Number=1,Type=Integer,Description="Read Depth">\n'
-            '##FORMAT=<ID=AC,Number=1,Type=Integer,Description="Nonrefernece Count">\n#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t{}\n'.format(name))
+            '##FORMAT=<ID=AC,Number=1,Type=Integer,Description="Nonrefernece Count">\n'
+            '##FORMAT=<ID=OV,Number=1,Type=Integer,Description="Overlapping mismatch Count">\n'
+            '#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t{}\n'.format(name))
         # move to new file hash headers and only write headers that have mutations
         for line in IN:
             fields = line.strip().split()
@@ -410,8 +417,9 @@ with open(name + '/' + name + '_substitutions.out', 'r') as IN:
             location = fields[0].strip().split(':')
             key = mm_quals[fields[0]][0]
             out_str = location[0] + '\t' + location[1] + "\t" + fields[
-                0] + '\t' + ref + '\t' + mut + f'\t.\t.\tDP={key};AC={len(mm_quals[fields[0]])-1}\tGT\t1/0\n'
+                0] + '\t' + ref + '\t' + mut + f'\t.\t.\tDP={key};AC={len(mm_quals[fields[0]])-1};OV={((len(overlap_names[fields[0]])-1)*2) if fields[0] in overlap_names else 0}\tGT\t1/0\n'
             out.write(out_str)
+
 tme = (time.time() - strt) / 3600
 
 print(f'overlap_mismatch has completed. The number of overlapping bases is {ovrlp_seq}\nThe number of putative mismatches is {sum(subs.values())}\nThe time taking to analyse {name} was {tme} hrs',flush=True)
