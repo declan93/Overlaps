@@ -37,9 +37,9 @@ bs_q = 30  # base quality thrshold
 cvg = 1  # 'coverage
 mp_q = 60  # read mapping quality
 
-print(f'Base Quality Threshold is {bs_q}')
-print(f'Putative Mutation Sequencing Depth Threshold is {cvg}')
-print(f'Mapping Quality is {mp_q}\n')
+print(f'Base Quality Threshold is {bs_q}',flush=True)
+print(f'Putative Mutation Sequencing Depth Threshold is {cvg},',flush=True)
+print(f'Mapping Quality is {mp_q}\n',flush=True)
 
 
 # reverse complement not currently used will need it for strand asymmetry
@@ -162,11 +162,11 @@ name = BAM.split('.')[0].split('/')[-1]
 print(name)
 if not os.path.exists(name):
     os.makedirs(name)
-print(f'Running get_overlaps to estimate mismatches for sample {name}\n')
+print(f'Running get_overlaps to estimate mismatches for sample {name}\n',flush=True)
 ovrlp_seq = 0
 
 with pysam.AlignmentFile(BAM, 'rb') as SAM:
-    print(f'File {BAM} opened')
+    print(f'File {BAM} opened',flush=True)
     for read, read2 in read_pair_generator(SAM):
         if read is None or read2 is None:
             continue
@@ -294,8 +294,7 @@ with pysam.AlignmentFile(BAM, 'rb') as SAM:
     read_counts = read_counts + 1
 
     if int(read_counts) > int(num_reads):
-        print(f'Number of paired reads processed that satisfy thresholds is {read_counts} ', end="\r")
-        sys.stdout.flush()
+        print(f'Number of paired reads processed that satisfy thresholds is {read_counts} ', end="\r",flush=True)
         num_reads += 20000
         print(mismatch)
 
@@ -318,8 +317,6 @@ with pysam.AlignmentFile(BAM, 'rb') as SAM:
                                 if key in mm_quals.keys():
                                     mm_quals[key].append(
                                         pileupread.alignment.query_qualities[pileupread.query_position - 1])
-                                    print(pileupread)
-                                    print(pileupread.alignment.query_qualities[pileupread.query_position - 1])
                                 else:
                                     mm_quals[key] = [cov.n, pileupread.alignment.query_qualities[
                                         pileupread.query_position - 1]]
@@ -335,7 +332,7 @@ with pysam.AlignmentFile(BAM, 'rb') as SAM:
                                 continue
             else:
                 continue
-print('Writing mutations to file \n')
+print('Writing mutations to file \n',flush=True)
 with open(name + '/' + name + '_substitutions.out', 'w') as out:
     out.write('pos\tref_alt\tmismatching_qualities\tmatching_qualities\n')
     for key, value in mismatch.items():
@@ -343,7 +340,7 @@ with open(name + '/' + name + '_substitutions.out', 'w') as out:
             [str(y) for y in m_quals[key]]) + '\n'
         out.write(outstring)
 
-print('Calculating Mutation counts where Pair agree \n')
+print('Calculating Mutation counts where Pair agree \n',flush=True)
 
 with open(name + '/' + name + '_sub_counts.out', 'w') as cnts:
     subs = Counter(mismatch.values())
@@ -352,7 +349,7 @@ with open(name + '/' + name + '_sub_counts.out', 'w') as cnts:
         out = str(key) + ' ' + str(value) + ' ' + str(ovrlp_seq) + '\n'
         cnts.write(out)
 
-print(f'making VCF for {name}')
+print(f'making VCF for {name}',flush=True)
 
 with open(name + '/' + name + '_substitutions.out', 'r') as IN:
     next(IN)
@@ -418,4 +415,4 @@ with open(name + '/' + name + '_substitutions.out', 'r') as IN:
             out.write(out_str)
 tme = (time.time() - strt) / 3600
 
-print(f'overlap_mismatch has completed. The number of overlapping bases is {ovrlp_seq}\nThe number of putative mismatches is {sum(subs.values())}\nThe time taking to analyse {name} was {tme} hrs')
+print(f'overlap_mismatch has completed. The number of overlapping bases is {ovrlp_seq}\nThe number of putative mismatches is {sum(subs.values())}\nThe time taking to analyse {name} was {tme} hrs',flush=True)
