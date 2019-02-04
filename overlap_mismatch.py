@@ -156,7 +156,7 @@ def read_pair_generator(bam, region_string=None):
 
 #######
 
-num_reads = 19999  # progression output
+num_reads = 1000000  # progression output
 read_counts = 0
 name = BAM.split('.')[0].split('/')[-1]
 print(name)
@@ -295,8 +295,7 @@ with pysam.AlignmentFile(BAM, 'rb') as SAM:
 
     if int(read_counts) > int(num_reads):
         print(f'Number of paired reads processed that satisfy thresholds is {read_counts} ', end="\r",flush=True)
-        num_reads += 20000
-        print(mismatch)
+        num_reads += 999999
 
     with open(SNP, "r") as snps:
         for line in snps:
