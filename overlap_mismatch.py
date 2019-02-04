@@ -93,33 +93,33 @@ def check_cigar(cig_pat, cigar_string):
 
 
 def ref_matches(align_type, idx, rcig, mcig, mdz, check_cigar):  # remember to MDZ=MDZ1 etc
-    if align_type.isdigit() and 0 != int(align_type) and len(mdz) - 1 != idx and check_cigar(cig_g, rcig) == False and \
-            check_cigar(cig_g, mcig) == False:  # sub out matching bases and progress through read
+    if align_type.isdigit() and 0 != int(align_type) and len(mdz) - 1 != idx and check_cigar(cig_g, rcig) is False and \
+            check_cigar(cig_g, mcig) is False:  # sub out matching bases and progress through read
         return True
     else:
         return False
 
 
-def filter1(read, mp_q):
-    if read.mapq >= mp_q and read2.mapq >= mp_q and read.tid == read2.tid:
-        return True
-    else:
-        return False
+#def filter1(read, mp_q):
+ #   if read.mapq >= mp_q and read2.mapq >= mp_q and read.tid == read2.tid:
+  #      return True
+   # else:
+    #    return False
 
 
-def chk_cov_snp_ql(read, cov, m1_pos, read_pos, bs_q, rref, snp_loc):
-    if int(cov.pos) == int(m1_pos):  # and int(cov.n) >= cvg and read.query_qualities[(int(read_pos))] >= bs_q and (
-        #   str(rref) + ':' + str(
-        # m1_pos)) not in snp_loc:
-        # and returns coverage for every base in reads also filtering out variants here (snp_loc)
-        return True
-    else:
-        return False
+# def chk_cov_snp_ql(read, cov, m1_pos, read_pos, bs_q, rref, snp_loc):
+ #   if int(cov.pos) == int(m1_pos):  # and int(cov.n) >= cvg and read.query_qualities[(int(read_pos))] >= bs_q and (
+  #      #   str(rref) + ':' + str(
+   #     # m1_pos)) not in snp_loc:
+    #    # and returns coverage for every base in reads also filtering out variants here (snp_loc)
+     #   return True
+    #else:
+     #   return False
 
 
 def ref_mismatches(align_type, nucs, rcig, mcig, check_cigar):
-    if align_type.isalpha() and align_type in nucs and len(align_type) == 1 and check_cigar(cig_g, rcig) == False and \
-            check_cigar(cig_g, mcig) == False:
+    if align_type.isalpha() and align_type in nucs and len(align_type) == 1 and check_cigar(cig_g, rcig) is False and \
+            check_cigar(cig_g, mcig) is False:
         return True
     else:
         return False
@@ -169,7 +169,7 @@ print(f'Running get_overlaps to estimate mismatches for sample {name}\n', flush=
 
 
 with pysam.AlignmentFile(BAM, 'rb') as SAM:
-    print(f'File {BAM} opened',flush=True)
+    print(f'File {BAM} opened', flush=True)
     for read, read2 in read_pair_generator(SAM):
         if read is None or read2 is None:
             continue
@@ -297,7 +297,7 @@ with pysam.AlignmentFile(BAM, 'rb') as SAM:
     read_counts = read_counts + 1
 
     if int(read_counts) > int(num_reads):
-        print(f'Number of paired reads processed that satisfy thresholds is {read_counts} ', end="\r",flush=True)
+        print(f'Number of paired reads processed that satisfy thresholds is {read_counts} ', end="\r", flush=True)
         num_reads += 1000000
 
     with open(SNP, "r") as snps:
@@ -308,7 +308,7 @@ with pysam.AlignmentFile(BAM, 'rb') as SAM:
 ##todo Tidy this into functions
     for key, value in mismatch.items():
         fields = key.strip().split(':')
-        for cov in SAM.pileup(str(fields[0]), int(fields[1]) - 1, int(fields[1]), ignore_overlaps=False, stepper='nofilter', nofilter=True): # min_base_quality=0, nofilter=True):
+        for cov in SAM.pileup(str(fields[0]), int(fields[1]) - 1, int(fields[1]), ignore_overlaps=False, stepper='nofilter', nofilter=True):  # min_base_quality=0, nofilter=True):
             if int(cov.pos) == int(fields[1]):
                 for pileupread in cov.pileups:
                     #if check_cigar(cig_g, pileupread.alignment.cigarstring) == True:
@@ -335,7 +335,7 @@ with pysam.AlignmentFile(BAM, 'rb') as SAM:
             else:
                 continue
 
-print('Writing mutations to file \n',flush=True)
+print('Writing mutations to file \n', flush=True)
 
 with open(name + '/' + name + '_substitutions.out', 'w') as out:
     out.write('pos\tref_alt\tmismatching_qualities\tmatching_qualities\n')
@@ -344,7 +344,7 @@ with open(name + '/' + name + '_substitutions.out', 'w') as out:
             [str(y) for y in m_quals[key]]) + '\n'
         out.write(outstring)
 
-print('Calculating Mutation counts where Pair agree \n',flush=True)
+print('Calculating Mutation counts where Pair agree \n', flush=True)
 
 with open(name + '/' + name + '_sub_counts.out', 'w') as cnts:
     subs = Counter(mismatch.values())
@@ -353,7 +353,7 @@ with open(name + '/' + name + '_sub_counts.out', 'w') as cnts:
         out = str(key) + ' ' + str(value) + ' ' + str(ovrlp_seq) + '\n'
         cnts.write(out)
 
-print(f'making VCF for {name}',flush=True)
+print(f'making VCF for {name}', flush=True)
 
 with open(name + '/' + name + '_substitutions.out', 'r') as IN:
     next(IN)
@@ -417,9 +417,9 @@ with open(name + '/' + name + '_substitutions.out', 'r') as IN:
             location = fields[0].strip().split(':')
             key = mm_quals[fields[0]][0]
             out_str = location[0] + '\t' + location[1] + "\t" + fields[
-                0] + '\t' + ref + '\t' + mut + f'\t.\t.\tDP={key};AC={len(mm_quals[fields[0]])-1};OV={((len(overlap_names[fields[0]])-1)*2) if fields[0] in overlap_names else 0}\tGT\t1/0\n'
+                0] + '\t' + ref + '\t' + mut + f'\t.\t.\tDP={key};AC={len(mm_quals[fields[0]])-1};OV={(len(overlap_names[fields[0]])) if fields[0] in overlap_names else 0}\tGT\t1/0\n'
             out.write(out_str)
 
 tme = (time.time() - strt) / 3600
 
-print(f'overlap_mismatch has completed. The number of overlapping bases is {ovrlp_seq}\nThe number of putative mismatches is {sum(subs.values())}\nThe time taking to analyse {name} was {tme} hrs',flush=True)
+print(f'overlap_mismatch has completed. The number of overlapping bases is {ovrlp_seq}\nThe number of putative mismatches is {sum(subs.values())}\nThe time taking to analyse {name} was {tme} hrs', flush=True)
