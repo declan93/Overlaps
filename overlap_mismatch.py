@@ -407,7 +407,7 @@ with open(name + '/' + name + '_substitutions.out', 'r') as IN:
             'assembly=b37,length=155270560>\n##contig=<ID=Y,assembly=b37,length=59373566>\n##contig=<ID=hs37d5,'
             'assembly=b37,length=35477943>\n##INFO=<ID=DP,Number=1,Type=Integer,Description="Read Depth">\n'
             '##INFO=<ID=AC,Number=1,Type=Integer,Description="Nonrefernece Count">\n'
-            '##INFO<ID=OV,Number=1,Type=Integer,Description="Overlapping mismatch Count">\n'
+            '##INFO=<ID=OV,Number=1,Type=Integer,Description="Overlapping mismatch Count">\n'
             '##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype tag">\n'
             '#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t{}\n'.format(name))
         # move to new file hash headers and only write headers that have mutations
