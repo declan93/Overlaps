@@ -405,9 +405,10 @@ with open(name + '/' + name + '_substitutions.out', 'r') as IN:
             'assembly=b37,length=39786>\n##contig=<ID=GL000249.1,assembly=b37,length=38502>\n##contig=<ID=MT,'
             'assembly=b37,length=16569>\n##contig=<ID=NC_007605,assembly=b37,length=171823>\n##contig=<ID=X,'
             'assembly=b37,length=155270560>\n##contig=<ID=Y,assembly=b37,length=59373566>\n##contig=<ID=hs37d5,'
-            'assembly=b37,length=35477943>\n##FORMAT=<ID=DP,Number=1,Type=Integer,Description="Read Depth">\n'
-            '##FORMAT=<ID=AC,Number=1,Type=Integer,Description="Nonrefernece Count">\n'
-            '##FORMAT=<ID=OV,Number=1,Type=Integer,Description="Overlapping mismatch Count">\n'
+            'assembly=b37,length=35477943>\n##INFO=<ID=DP,Number=1,Type=Integer,Description="Read Depth">\n'
+            '##INFO=<ID=AC,Number=1,Type=Integer,Description="Nonrefernece Count">\n'
+            '##INFO<ID=OV,Number=1,Type=Integer,Description="Overlapping mismatch Count">\n'
+            '##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype tag">\n'
             '#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t{}\n'.format(name))
         # move to new file hash headers and only write headers that have mutations
         for line in IN:
@@ -415,7 +416,13 @@ with open(name + '/' + name + '_substitutions.out', 'r') as IN:
             ref = list(fields[1])[0]
             mut = list(fields[1])[1]
             location = fields[0].strip().split(':')
-            key = mm_quals[fields[0]][0]
+            try:
+                key = mm_quals[fields[0]][0]
+            except IndexError:
+                try:
+                    key = m_quals[fields[0]][0]
+                except IndexError:
+                    key = "NA"
             out_str = location[0] + '\t' + location[1] + "\t" + fields[
                 0] + '\t' + ref + '\t' + mut + f'\t.\t.\tDP={key};AC={len(mm_quals[fields[0]])-1};OV={(len(overlap_names[fields[0]])) if fields[0] in overlap_names else 0}\tGT\t1/0\n'
             out.write(out_str)
