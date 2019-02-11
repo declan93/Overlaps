@@ -300,19 +300,23 @@ with pysam.AlignmentFile(BAM, 'rb') as SAM:
         print(f'Number of paired reads processed that satisfy thresholds is {read_counts} ', end="\r", flush=True)
         num_reads += 1000000
 
+    init_mism = len(mismatch)
     with open(SNP, "r") as snps:
         for line in snps:
             if line.strip() in mismatch:
                 del mismatch[line.strip()]
                 del overlap_names[line.strip()]
-##todo Tidy this into functions
+
+    print(f'The initial number of mismatches was {init_mism} while the number of found snps was {init_mism - len(mismatch)}')
+
+    ##todo Tidy this into functions
     for key, value in mismatch.items():
         fields = key.strip().split(':')
         for cov in SAM.pileup(str(fields[0]), int(fields[1]) - 1, int(fields[1]), ignore_overlaps=False, stepper='nofilter', nofilter=True):  # min_base_quality=0, nofilter=True):
             if int(cov.pos) == int(fields[1]):
                 for pileupread in cov.pileups:
-                    #if check_cigar(cig_g, pileupread.alignment.cigarstring) == True:
-                     #   continue
+                #if check_cigar(cig_g, pileupread.alignment.cigarstring) == True:
+                 #   continue
                     if not pileupread.is_del and not pileupread.is_refskip and pileupread.alignment.mapq >= mp_q:
                         if int(fields[1]) == int(pileupread.alignment.pos + pileupread.query_position):
                             if pileupread.alignment.query_sequence[pileupread.query_position - 1] == value[1]:
