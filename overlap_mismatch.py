@@ -124,7 +124,7 @@ def ref_mismatches(align_type, nucs, rcig, mcig, check_cigar):
     else:
         return False
 
-
+##todo add an implementation of 8-oxoG dna damage estimator can be used as a filter here
 def read_pair_generator(bam, region_string=None):
     # Generate read pairs in a BAM file or within a region string.
     # Reads are added to read_dict until a pair is found.
