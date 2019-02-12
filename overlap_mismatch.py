@@ -350,7 +350,7 @@ with pysam.AlignmentFile(BAM, 'rb') as SAM:
                 del mismatch[line.strip()]
                 del overlap_names[line.strip()]
 
-    G_iv = math.log2((((gtr1 + car2) / (G_sum_r1 + C_sum_r2)) / ((car2 + gtr2) / (C_sum_r1 + G_sum_r2))))
+    G_iv = math.log2((((gtr1 + car2) / (G_sum_r1 + C_sum_r2)) / ((car1 + gtr2) / (C_sum_r1 + G_sum_r2))))
     print(f'\nThe G -> T imbalance is {G_iv}\nThe initial number of mismatches was {init_mism} while the number of found snps was {init_mism - len(mismatch)}')
 
     ##todo Tidy this into functions
