@@ -194,10 +194,10 @@ with pysam.AlignmentFile(BAM, 'rb') as SAM:
         # not required ? means before is optional so we know MD only returns integers. but it is currently working
         # so come back later.
         MDZ2 = re.findall(r'[A-Za-z]|-?\d+\.\d+|\d+', md2)
-        gtr1 = 0
-        car1 = 0
-        gtr2 = 0 
-        car2 = 0
+        gtr1 = 0.00000001
+        car1 = 0.00000001
+        gtr2 = 0.00000001
+        car2 = 0.00000001
         if read.is_read1:
             C_sum_r1 = str(read.query_alignment_sequence).count("C")
             G_sum_r1 = str(read.query_alignment_sequence).count("G")
@@ -326,7 +326,7 @@ with pysam.AlignmentFile(BAM, 'rb') as SAM:
                 G_iv = (((gtr1 + car2)/(G_sum_r1 + C_sum_r2))/((car2 + gtr2)/(C_sum_r1 + G_sum_r2)))
                 print(G_iv)
                 if G_iv >= 1.5:
-                    for key in sub_dict,keys:
+                    for key in sub_dict.keys():
                         mismatch.pop(key,None)
 
             sub_dict = {}
