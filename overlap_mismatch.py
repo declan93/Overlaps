@@ -324,7 +324,6 @@ with pysam.AlignmentFile(BAM, 'rb') as SAM:
             #print(gtr1,gtr2,car1,G_sum_r2,G_sum_r1,C_sum_r1,C_sum_r2)
             if gtr1 and gtr2 and car1 and car2 > 0:
                 G_iv = (((gtr1 + car2)/(G_sum_r1 + C_sum_r2))/((car2 + gtr2)/(C_sum_r1 + G_sum_r2)))
-                print(G_iv)
                 if G_iv >= 1.5:
                     for key in sub_dict.keys():
                         mismatch.pop(key,None)
