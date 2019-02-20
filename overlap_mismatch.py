@@ -32,9 +32,9 @@ m_quals = defaultdict(list)
 overlap_names = defaultdict(list)
 
 # Thresholds #####
-bs_q = 30  # base quality thrshold
+bs_q = 20  # base quality thrshold
 cvg = 1  # 'coverage
-mp_q = 60  # read mapping quality
+mp_q = 30  # read mapping quality
 
 print(f'Base Quality Threshold is {bs_q}', flush=True)
 print(f'Putative Mutation Sequencing Depth Threshold is {cvg}', flush=True)
@@ -125,10 +125,6 @@ def ref_mismatches(align_type, nucs, rcig, mcig, check_cigar):
     else:
         return False
 
-##todo add an implementation of 8-oxoG dna damage estimator can be used as a filter here
-#def gt_r1(read):
-
-
 
 def read_pair_generator(bam, region_string=None):
     # Generate read pairs in a BAM file or within a region string.
@@ -186,6 +182,9 @@ with pysam.AlignmentFile(BAM, 'rb') as SAM:
     for read, read2 in read_pair_generator(SAM):
         if read is None or read2 is None:
             continue
+        #for pair in read.get_aligned_pairs(with_seq=True):
+            #if type(pair[0]) != type(None) and type(pair[1]) != type(None) and type(pair[2]) != type(None) and len(pair[2]) == 1 and pair[2].islower() == True:
+                #print(read.query_name,read.cigarstring, read.get_tag('MD'), read.get_aligned_pairs(with_seq=True))
         pos = read.pos
         rlen = read.infer_query_length()  # read length **** cProfiler showed that 1/8 of the time was spent on
         # read.get_reference_sequence() going to switch to infer query length. This uses the Cigar and skips
@@ -203,12 +202,19 @@ with pysam.AlignmentFile(BAM, 'rb') as SAM:
         # not required ? means before is optional so we know MD only returns integers. but it is currently working
         # so come back later.
         MDZ2 = re.findall(r'[A-Za-z]|-?\d+\.\d+|\d+', md2)
-        if read.is_read1:
+        if not read.is_reverse:
             C_sum_r1 += str(read.query_alignment_sequence).count("C")
             G_sum_r1 += str(read.query_alignment_sequence).count("G")
-        if read2.is_read2:
-            C_sum_r2 += str(read2.query_alignment_sequence).count("C")
-            G_sum_r2 += str(read2.query_alignment_sequence).count("G")
+        else:
+            G_sum_r1 += str(read.query_alignment_sequence).count("C")
+            C_sum_r1 += str(read.query_alignment_sequence).count("G")
+        if read2.is_reverse:
+            G_sum_r2 += str(read2.query_alignment_sequence).count("C")
+            C_sum_r2 += str(read2.query_alignment_sequence).count("G")
+        else:
+            C_sum_r2 += str(read.query_alignment_sequence).count("C")
+            G_sum_r2 += str(read.query_alignment_sequence).count("G")
+
         if read_r1_1st_overlap(pos, mpos, rlen, mlen, md1, md2):
             ovrlp_seq += (int(pos) + int(rlen) - int(mpos))
             mm_cnt = 0
@@ -216,7 +222,8 @@ with pysam.AlignmentFile(BAM, 'rb') as SAM:
             read2_pos = 0
             m1_pos = int(pos)
             m2_pos = int(mpos)
-            ##todo hash overlapping reads with positions and qualities this way we can tell if a read has multiple overlapping posiions also take read_pos as I want to see where in the reads are we seeing the mismatches.
+            ##todo hash overlapping reads with positions and qualities this way we can tell if a read has
+            # multiple overlapping posiions also take read_pos as I want to see where in the reads are we seeing the mismatches.
             for idx, align_type in enumerate(MDZ1):
                 rmm_q = 0
                 if ref_matches(align_type, idx, rcig, mcig, MDZ1, check_cigar):
@@ -234,10 +241,14 @@ with pysam.AlignmentFile(BAM, 'rb') as SAM:
                     if int(rmm_q) >= bs_q:
                         sub_dict[m1_key] = ref + mm_b
                     read_pos += 1
-                    if (ref+mm_b) == 'GT':
+                    if (ref+mm_b) == 'GT' and not read.is_reverse:
                         gtr1 += 1
-                    if (ref+mm_b) == 'CA':
+                    else:
                         car1 += 1
+                    if (ref+mm_b) == 'CA' and not read.is_reverse:
+                        car1 += 1
+                    else:
+                        gtr1 += 1
             for idx2, align_type in enumerate(MDZ2):
                 rmm_q = 0
                 if ref_matches(align_type, idx2, rcig, mcig, MDZ2, check_cigar):
@@ -249,10 +260,15 @@ with pysam.AlignmentFile(BAM, 'rb') as SAM:
                     m2_pos = m2_pos + 1
                     rmm_b = str(read2.query_alignment_sequence)[read2_pos]  # mismatching base
                     rmm_q = read2.query_qualities[read2_pos]
-                    if (ref+rmm_b) == 'GT':
-                        gtr2 += 1
-                    if (ref+rmm_b) == 'CA':
+                    if (ref+rmm_b) == 'GT' and read2.is_reverse:
                         car2 += 1
+                    else:
+                        gtr2 += 1
+                    if (ref+rmm_b) == 'CA' and read2.is_reverse:
+                        gtr2 += 1
+                    else:
+                        car2 += 1
+                
                     m2_key = str(rref) + ':' + str(m2_pos)  # + ':' + read2.query_name
                     if int(rmm_q) >= bs_q:
                         sub_dict_read2[m2_key] = ref + rmm_b
@@ -287,10 +303,14 @@ with pysam.AlignmentFile(BAM, 'rb') as SAM:
                     mm_cnt = mm_cnt + 1  # mutation per read count
                     m1_pos = m1_pos + 1
                     mm_b = str(read.query_alignment_sequence)[read_pos]  # mismatching base
-                    if (ref+mm_b) == 'GT':
+                    if (ref+mm_b) == 'GT' and not read.is_reverse:
                         gtr1 += 1
-                    if (ref+mm_b) == 'CA':
+                    else:
                         car1 += 1
+                    if (ref+mm_b) == 'CA' and not read.is_reverse:
+                        car1 += 1
+                    else:
+                        gtr1 += 1
                     rmm_q = read.query_qualities[read_pos]
                     m1_key = str(rref) + ':' + str(m1_pos)  # + ':' + read.query_name
                     if int(rmm_q) >= bs_q:
@@ -308,9 +328,13 @@ with pysam.AlignmentFile(BAM, 'rb') as SAM:
                     m2_pos = m2_pos + 1
                     rmm_b = str(read2.query_alignment_sequence)[read2_pos]  # mismatching base
                     rmm_q = read2.query_qualities[read2_pos]
-                    if (ref+rmm_b) == 'GT':
+                    if (ref+rmm_b) == 'GT' and read2.is_reverse:
+                        car2 += 1
+                    else:
                         gtr2 += 1
-                    if (ref+rmm_b) == 'CA':
+                    if (ref+rmm_b) == 'CA' and read2.is_reverse:
+                        gtr2 += 1
+                    else:
                         car2 += 1
                     m2_key = str(rref) + ':' + str(m2_pos)  # + ':' + read2.query_name
                     if int(rmm_q) >= bs_q:
@@ -324,13 +348,6 @@ with pysam.AlignmentFile(BAM, 'rb') as SAM:
                         else:
                             overlap_names[m2_key] = [(ref+rmm_b), read.query_name]
                     read2_pos += 1
-
-            #print(gtr1,gtr2,car1,G_sum_r2,G_sum_r1,C_sum_r1,C_sum_r2)
-            #if gtr1 and gtr2 and car1 and car2 > 0:
-             #   G_iv = (((gtr1 + car2)/(G_sum_r1 + C_sum_r2))/((car2 + gtr2)/(C_sum_r1 + G_sum_r2)))
-            #    if G_iv >= 1.5:
-              #      for key in sub_dict.keys():
-             #           mismatch.pop(key,None)
 
             sub_dict = {}
             sub_dict_read2 = {}
@@ -350,6 +367,7 @@ with pysam.AlignmentFile(BAM, 'rb') as SAM:
                 del mismatch[line.strip()]
                 del overlap_names[line.strip()]
 
+    print(gtr1, gtr2, car1, car2, G_sum_r1, G_sum_r2, C_sum_r1, C_sum_r2)
     G_iv = math.log2((((gtr1 + car2) / (G_sum_r1 + C_sum_r2)) / ((car1 + gtr2) / (C_sum_r1 + G_sum_r2))))
     print(f'\nThe G -> T imbalance is {G_iv}\nThe initial number of mismatches was {init_mism} while the number of found snps was {init_mism - len(mismatch)}')
 
