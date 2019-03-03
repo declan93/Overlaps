@@ -35,6 +35,8 @@ sub_dict = {}  # This needs to be emptied after every pair processed
 sub_dict_read2 = {}  # This also needs to be emptied
 mismatch = {}
 mismatch_ref = {}
+mismatch_r1_f = {}
+mismatch_r1_r = {}
 mm_quals = defaultdict(list)
 m_quals = defaultdict(list)
 overlap_names = defaultdict(list)
@@ -284,9 +286,11 @@ with pysam.AlignmentFile(BAM, compres) as SAM:
                             mismatch[m2_key] = reverse_complement(ref + rmm_b)
                             r1r_c += 1
                             mismatch_ref[m2_key] = ref + rmm_b
+                            mismatch_r1_r[m2_key] = ref + rmm_b
                         else:
                             mismatch[m2_key] = ref + rmm_b
                             mismatch_ref[m2_key] = ref + rmm_b
+                            mismatch_r1_f[m2_key] = ref + rmm_b
                             r1f_c += 1
                         if m2_key in overlap_names.keys():
                             overlap_names[m2_key].append(str(ref+rmm_b))
@@ -369,11 +373,13 @@ with pysam.AlignmentFile(BAM, compres) as SAM:
                         if read.is_reverse:
                             mismatch[m2_key] = reverse_complement(ref + rmm_b)
                             mismatch_ref[m2_key] = ref + rmm_b
+                            mismatch_r1_r[m2_key] = ref + rmm_b
                             r1r_c += 1
                         else:
                             mismatch[m2_key] = ref + rmm_b
                             r1f_c += 1
                             mismatch_ref[m2_key] = ref + rmm_b
+                            mismatch_r1_f[m2_key] = ref + rmm_b
                         if m2_key in overlap_names.keys():
                             overlap_names[m2_key].append(str(ref+rmm_b))
                             overlap_names[m2_key].append(read.query_name)
@@ -551,12 +557,37 @@ for key, value in mismatch_ref.items():
             cvg_mism_ref[key] = value
     else:
         continue
+        
+cvg_mism_r1f = {}
+for key, value in mismatch_r1_f.items():
+    if mm_quals[key]:
+        if mm_quals[key][0] >= cvg:
+            cvg_mism_r1f[key] = value
+    elif m_quals[key]:
+        if m_quals[key][0] >= cvg:
+            cvg_mism_r1f[key] = value
+    else:
+        continue
 
+cvg_mism_r1r = {}
+for key, value in mismatch_r1_r.items():
+    if mm_quals[key]:
+        if mm_quals[key][0] >= cvg:
+            cvg_mism_r1r[key] = value
+    elif m_quals[key]:
+        if m_quals[key][0] >= cvg:
+            cvg_mism_r1r[key] = value
+    else:
+        continue
 
 subs1 = Counter(cvg_mism.values())
 subs2 = Counter(cvg_mism_ref.values())
+subs3 = Counter(cvg_mism_r1f.values())
+subs4 = Counter(cvg_mism_r1r.values())
 
 print(f'\n % of Read 1 mapping to forward strand is {(r1f_c/(r1f_c+r1r_c))}\n')
+
+### Read 1 aligned
 
 per_CTR1 = (subs1["CA"]/sum(subs1.values()), subs1["GT"]/sum(subs1.values()),
           subs1["CG"]/sum(subs1.values()), subs1["GC"]/sum(subs1.values()),
@@ -585,7 +616,7 @@ plt.gca().add_artist(text_box)
 plt.tight_layout()
 plt.savefig(name + "/" +name + '_read1rev_reversed.png')
 
-#plt.clf()
+plt.clf()
 ## Reference orientated
 
 per_CTR1F = (subs2["CA"]/sum(subs2.values()), subs2["GT"]/sum(subs2.values()),
@@ -616,6 +647,69 @@ plt.setp(text_box.patch, facecolor='white', alpha=0.5)
 plt.gca().add_artist(text_box)
 plt.tight_layout()
 plt.savefig(name + "/" + name + '_read1_forward_strand.png')
+
+plt.clf()
+### Read1 forward strand
+R1F = (subs3["CA"]/sum(subs3.values()), subs3["GT"]/sum(subs3.values()),
+          subs3["CG"]/sum(subs3.values()), subs3["GC"]/sum(subs3.values()),
+          subs3["CT"]/sum(subs3.values()), subs3["GA"]/sum(subs3.values()),
+          subs3["TA"]/sum(subs3.values()), subs3["AT"]/sum(subs3.values()),
+          subs3["TC"]/sum(subs3.values()), subs3["AG"]/sum(subs3.values()),
+          subs3["TG"]/sum(subs3.values()), subs3["AC"]/sum(subs3.values()))
+
+# create plot
+
+bar_width = 1
+opacity = 0.8
+
+
+y_pos = [0,1,4,5,8,9,12,13,16,17,20,21]
+rects12 = plt.bar(y_pos, R1F, bar_width,
+                 alpha=opacity,
+                 color=['b','g','b','g','b','g','b','g','b','g','b','g'])
+
+plt.xlabel('Substitutions')
+plt.ylabel('% Relative contribution')
+plt.title(f'Mutational frequencies where read 1\n maps to the + for {name}')
+plt.xticks(y_pos, ('CA', 'GT', 'CG', 'GC', 'CT', 'GA', 'TA', 'AT', 'TC', 'AG', 'TG', 'AC'))
+box_text = f'G->T log2 damage is {G_ivl:.3f}\nThe read1 + strand % = {(r1f_c/(r1f_c+r1r_c)):.3f}'
+text_box = AnchoredText(box_text, frameon=True, loc=1, pad=0.5)
+plt.setp(text_box.patch, facecolor='white', alpha=0.5)
+plt.gca().add_artist(text_box)
+plt.tight_layout()
+plt.savefig(name + "/" + name + '_read1_only_forward_strand.png')
+
+plt.clf()
+### Read1 maps to the reverse
+R1R = (subs4["CA"]/sum(subs4.values()), subs4["GT"]/sum(subs4.values()),
+          subs4["CG"]/sum(subs4.values()), subs4["GC"]/sum(subs4.values()),
+          subs4["CT"]/sum(subs4.values()), subs4["GA"]/sum(subs4.values()),
+          subs4["TA"]/sum(subs4.values()), subs4["AT"]/sum(subs4.values()),
+          subs4["TC"]/sum(subs4.values()), subs4["AG"]/sum(subs4.values()),
+          subs4["TG"]/sum(subs4.values()), subs4["AC"]/sum(subs4.values()))
+
+# create plot
+
+bar_width = 1
+opacity = 0.8
+
+
+y_pos = [0,1,4,5,8,9,12,13,16,17,20,21]
+rects12 = plt.bar(y_pos, R1R, bar_width,
+                 alpha=opacity,
+                 color=['b','g','b','g','b','g','b','g','b','g','b','g'])
+
+plt.xlabel('Substitutions')
+plt.ylabel('% Relative contribution')
+plt.title(f'Mutational frequencies where read 1\n maps to the - strand for {name}')
+plt.xticks(y_pos, ('CA', 'GT', 'CG', 'GC', 'CT', 'GA', 'TA', 'AT', 'TC', 'AG', 'TG', 'AC'))
+box_text = f'G->T log2 damage is {G_ivl:.3f}\nThe read1 + strand % = {(r1f_c/(r1f_c+r1r_c)):.3f}'
+text_box = AnchoredText(box_text, frameon=True, loc=1, pad=0.5)
+plt.setp(text_box.patch, facecolor='white', alpha=0.5)
+plt.gca().add_artist(text_box)
+plt.tight_layout()
+plt.savefig(name + "/" + name + '_read1_only_reverse_strand.png')
+
 
 print(f'overlap_mismatch has completed. The number of overlapping bases is {ovrlp_seq}\n'
       f'The number of putative mismatches is {sum(subs.values())}\nThe time taking to analyse {name} was {tme} hrs', flush=True)
