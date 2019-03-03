@@ -583,7 +583,7 @@ text_box = AnchoredText(box_text, frameon=True, loc=1, pad=0.5)
 plt.setp(text_box.patch, facecolor='white', alpha=0.5)
 plt.gca().add_artist(text_box)
 plt.tight_layout()
-plt.savefig(name + '_read1rev_reversed.png')
+plt.savefig(name + "/" +name + '_read1rev_reversed.png')
 
 #plt.clf()
 ## Reference orientated
@@ -615,7 +615,7 @@ text_box = AnchoredText(box_text, frameon=True, loc=1, pad=0.5)
 plt.setp(text_box.patch, facecolor='white', alpha=0.5)
 plt.gca().add_artist(text_box)
 plt.tight_layout()
-plt.savefig(name + '_read1_forward_strand.png')
+plt.savefig(name + "/" + name + '_read1_forward_strand.png')
 
 print(f'overlap_mismatch has completed. The number of overlapping bases is {ovrlp_seq}\n'
       f'The number of putative mismatches is {sum(subs.values())}\nThe time taking to analyse {name} was {tme} hrs', flush=True)
