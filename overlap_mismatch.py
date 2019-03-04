@@ -43,8 +43,8 @@ overlap_names = defaultdict(list)
 
 # Thresholds #####
 bs_q = 20  # base quality thrshold
-cvg = 20  # 'coverage
-mp_q = 60  # read mapping quality
+cvg = 5  # 'coverage
+mp_q = 40  # read mapping quality
 
 print(f'Base Quality Threshold is {bs_q}', flush=True)
 print(f'Putative Mutation Sequencing Depth Threshold is {cvg}', flush=True)
@@ -54,7 +54,7 @@ print(f'Mapping Quality is {mp_q}\n', flush=True)
 # reverse complement not currently used will need it for strand asymmetry
 def reverse_complement(dna):
     complement = {'A': 'T', 'C': 'G', 'G': 'C', 'T': 'A'}
-    return ''.join([complement[base] for base in dna[::-1]])
+    return ''.join([complement[base] for base in dna])  # change dna[::-1] for sequence reversing
 
 
 def read_r1_1st_overlap(pos, mpos, rlen, mlen, md1, md2):
@@ -104,8 +104,8 @@ def check_cigar(cig_pat, cigar_string):
 
 
 def ref_matches(align_type, idx, rcig, mcig, mdz):  # remember to MDZ=MDZ1 etc
-    if align_type.isdigit() and 0 != int(align_type) and len(mdz) - 1 != idx and check_cigar(cig_g, rcig) is False and \
-            check_cigar(cig_g, mcig) is False:  # sub out matching bases and progress through read
+    if align_type.isdigit() and 0 != int(align_type) and check_cigar(cig_g, rcig) is False and \
+            check_cigar(cig_g, mcig) is False: # and len(mdz) - 1 != idx   # sub out matching bases and progress through read
         return True
     else:
         return False
