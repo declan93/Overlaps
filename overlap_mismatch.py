@@ -587,6 +587,10 @@ subs4 = Counter(cvg_mism_r1r.values())
 
 print(f'\n % of Read 1 mapping to forward strand is {(r1f_c/(r1f_c+r1r_c))}\n')
 
+f, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, sharex='col', sharey='row', figsize=(13,13))
+
+
+
 ### Read 1 aligned
 
 per_CTR1 = (subs1["CA"]/sum(subs1.values()), subs1["GT"]/sum(subs1.values()),
@@ -601,22 +605,16 @@ bar_width = 1
 opacity = 0.8
 
 y_pos = [0,1,4,5,8,9,12,13,16,17,20,21]
-rects1 = plt.bar(y_pos, per_CTR1, bar_width,
+ax1.bar(y_pos, per_CTR1, bar_width,
                  alpha=opacity,
                  color=['b','g','b','g','b','g','b','g','b','g','b','g'])
 
-plt.xlabel('Substitutions')
-plt.ylabel('% Relative contribution')
-plt.title(f'Mutational frequencies where read 1 have no bearing\n to the reference for {name}')
-plt.xticks(y_pos, ('CA', 'GT', 'CG', 'GC', 'CT', 'GA', 'TA', 'AT', 'TC', 'AG', 'TG', 'AC'))
-box_text = f'G->T log2 damage is {G_ivl:.3f}\nThe read1 + strand % = {(r1f_c/(r1f_c+r1r_c)):.3f}'
-text_box = AnchoredText(box_text, frameon=True, loc=1, pad=0.5)
-plt.setp(text_box.patch, facecolor='white', alpha=0.5)
-plt.gca().add_artist(text_box)
-plt.tight_layout()
-plt.savefig(name + "/" +name + '_read1rev_reversed.png')
+ax1.set_xlabel('Substitutions')
+ax1.set_ylabel('% Relative contribution')
+ax1.set_title(f'Mutational frequencies where read 1 have no bearing\n to the reference for {name}')
+ax1.set_xticks(y_pos)
+ax1.set_xticklabels(('CA', 'GT', 'CG', 'GC', 'CT', 'GA', 'TA', 'AT', 'TC', 'AG', 'TG', 'AC'))
 
-plt.clf()
 ## Reference orientated
 
 per_CTR1F = (subs2["CA"]/sum(subs2.values()), subs2["GT"]/sum(subs2.values()),
@@ -628,28 +626,18 @@ per_CTR1F = (subs2["CA"]/sum(subs2.values()), subs2["GT"]/sum(subs2.values()),
 
 # create plot
 
-bar_width = 1
-opacity = 0.8
-
-
-y_pos = [0,1,4,5,8,9,12,13,16,17,20,21]
-rects12 = plt.bar(y_pos, per_CTR1F, bar_width,
+ax2.bar(y_pos, per_CTR1F, bar_width,
                  alpha=opacity,
                  color=['b','g','b','g','b','g','b','g','b','g','b','g'])
 
-plt.xlabel('Substitutions')
-plt.ylabel('% Relative contribution')
-plt.title(f'Mutational frequencies with respect to\n the reference for {name}')
-plt.xticks(y_pos, ('CA', 'GT', 'CG', 'GC', 'CT', 'GA', 'TA', 'AT', 'TC', 'AG', 'TG', 'AC'))
-box_text = f'G->T log2 damage is {G_ivl:.3f}\nThe read1 + strand % = {(r1f_c/(r1f_c+r1r_c)):.3f}'
-text_box = AnchoredText(box_text, frameon=True, loc=1, pad=0.5)
-plt.setp(text_box.patch, facecolor='white', alpha=0.5)
-plt.gca().add_artist(text_box)
-plt.tight_layout()
-plt.savefig(name + "/" + name + '_read1_forward_strand.png')
+ax2.set_xlabel('Substitutions')
+ax2.set_ylabel('% Relative contribution')
+ax2.set_title(f'Mutational frequencies with respect to\n the reference for {name}')
+ax2.set_xticks(y_pos)
+ax2.set_xticklabels(('CA', 'GT', 'CG', 'GC', 'CT', 'GA', 'TA', 'AT', 'TC', 'AG', 'TG', 'AC'))
 
-plt.clf()
 ### Read1 forward strand
+
 R1F = (subs3["CA"]/sum(subs3.values()), subs3["GT"]/sum(subs3.values()),
           subs3["CG"]/sum(subs3.values()), subs3["GC"]/sum(subs3.values()),
           subs3["CT"]/sum(subs3.values()), subs3["GA"]/sum(subs3.values()),
@@ -659,27 +647,14 @@ R1F = (subs3["CA"]/sum(subs3.values()), subs3["GT"]/sum(subs3.values()),
 
 # create plot
 
-bar_width = 1
-opacity = 0.8
+ax3.bar(y_pos, R1F, bar_width, alpha=opacity,color=['b','g','b','g','b','g','b','g','b','g','b','g'])
 
+ax3.set_xlabel('Substitutions')
+ax3.set_ylabel('% Relative contribution')
+ax3.set_title(f'Mutational frequencies where read 1\n maps to the + for {name}')
+ax3.set_xticks(y_pos)
+ax3.set_xticklabels(('CA', 'GT', 'CG', 'GC', 'CT', 'GA', 'TA', 'AT', 'TC', 'AG', 'TG', 'AC'))
 
-y_pos = [0,1,4,5,8,9,12,13,16,17,20,21]
-rects12 = plt.bar(y_pos, R1F, bar_width,
-                 alpha=opacity,
-                 color=['b','g','b','g','b','g','b','g','b','g','b','g'])
-
-plt.xlabel('Substitutions')
-plt.ylabel('% Relative contribution')
-plt.title(f'Mutational frequencies where read 1\n maps to the + for {name}')
-plt.xticks(y_pos, ('CA', 'GT', 'CG', 'GC', 'CT', 'GA', 'TA', 'AT', 'TC', 'AG', 'TG', 'AC'))
-box_text = f'G->T log2 damage is {G_ivl:.3f}\nThe read1 + strand % = {(r1f_c/(r1f_c+r1r_c)):.3f}'
-text_box = AnchoredText(box_text, frameon=True, loc=1, pad=0.5)
-plt.setp(text_box.patch, facecolor='white', alpha=0.5)
-plt.gca().add_artist(text_box)
-plt.tight_layout()
-plt.savefig(name + "/" + name + '_read1_only_forward_strand.png')
-
-plt.clf()
 ### Read1 maps to the reverse
 R1R = (subs4["CA"]/sum(subs4.values()), subs4["GT"]/sum(subs4.values()),
           subs4["CG"]/sum(subs4.values()), subs4["GC"]/sum(subs4.values()),
@@ -688,29 +663,24 @@ R1R = (subs4["CA"]/sum(subs4.values()), subs4["GT"]/sum(subs4.values()),
           subs4["TC"]/sum(subs4.values()), subs4["AG"]/sum(subs4.values()),
           subs4["TG"]/sum(subs4.values()), subs4["AC"]/sum(subs4.values()))
 
+
+box_text = f'G->T log2 damage is {G_ivl:.3f}\nThe read1 + strand % = {(r1f_c/(r1f_c+r1r_c)):.3f}'
+props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
+ax3.text(0.5, 0.95, box_text, transform=ax1.transAxes, fontsize=14)
 # create plot
 
-bar_width = 1
-opacity = 0.8
-
-
-y_pos = [0,1,4,5,8,9,12,13,16,17,20,21]
-rects12 = plt.bar(y_pos, R1R, bar_width,
+ax4.bar(y_pos, R1R, bar_width,
                  alpha=opacity,
                  color=['b','g','b','g','b','g','b','g','b','g','b','g'])
 
-plt.xlabel('Substitutions')
-plt.ylabel('% Relative contribution')
-plt.title(f'Mutational frequencies where read 1\n maps to the - strand for {name}')
-plt.xticks(y_pos, ('CA', 'GT', 'CG', 'GC', 'CT', 'GA', 'TA', 'AT', 'TC', 'AG', 'TG', 'AC'))
-box_text = f'G->T log2 damage is {G_ivl:.3f}\nThe read1 + strand % = {(r1f_c/(r1f_c+r1r_c)):.3f}'
-text_box = AnchoredText(box_text, frameon=True, loc=1, pad=0.5)
-plt.setp(text_box.patch, facecolor='white', alpha=0.5)
-plt.gca().add_artist(text_box)
-plt.tight_layout()
-plt.savefig(name + "/" + name + '_read1_only_reverse_strand.png')
+ax4.set_xlabel('Substitutions')
+ax4.set_ylabel('% Relative contribution')
+ax4.set_title(f'Mutational frequencies where read 1\n maps to the - strand for {name}')
+ax4.set_xticks(y_pos)
+ax4.set_xticklabels(('CA', 'GT', 'CG', 'GC', 'CT', 'GA', 'TA', 'AT', 'TC', 'AG', 'TG', 'AC'))
+#ax4.savefig(name + "/" + name + '_read1_only_reverse_strand.png')
 
-
+f.tight_layout()
+f.savefig(name + '/' + name + '_.png')
 print(f'overlap_mismatch has completed. The number of overlapping bases is {ovrlp_seq}\n'
       f'The number of putative mismatches is {sum(subs.values())}\nThe time taking to analyse {name} was {tme} hrs', flush=True)
-#plt.show()
