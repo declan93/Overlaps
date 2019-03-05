@@ -589,8 +589,6 @@ print(f'\n % of Read 1 mapping to forward strand is {(r1f_c/(r1f_c+r1r_c))}\n')
 
 f, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, sharex='col', sharey='row', figsize=(13,13))
 
-
-
 ### Read 1 aligned
 
 per_CTR1 = (subs1["CA"]/sum(subs1.values()), subs1["GT"]/sum(subs1.values()),
