@@ -467,7 +467,7 @@ with open(name + '/' + name + '_sub_counts.out', 'w') as cnts:
         cnts.write(out)
 
 print(f'making VCF for {name}', flush=True)
-print(overlap_names)
+
 with open(name + '/' + name + '_substitutions.out', 'r') as IN:
     next(IN)
     with open(name + '/' + name + '.vcf', 'w') as out:
