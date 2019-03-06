@@ -213,7 +213,9 @@ with pysam.AlignmentFile(BAM, compres) as SAM:
         MDZ2 = re.findall(r'[A-Za-z]|-?\d+\.\d+|\d+', md2)
 
         if read_r1_1st_overlap(pos, mpos, rlen, mlen, md1, md2):
-            ovl = (int(mpos) + int(mlen) - int(pos))
+            ovl = (int(pos) + int(rlen) - int(mpos))
+#            if ovl >= 100:
+ #               print(ovl)
             ovrlp_seq += ovl
             for i, j in enumerate(read.query_alignment_sequence):
                 if j == 'C' and read.query_qualities[i] >= bs_q:
@@ -305,6 +307,8 @@ with pysam.AlignmentFile(BAM, compres) as SAM:
 
         elif read_r2_1st_overlap(pos, mpos, rlen, mlen, md1, md2):
             ovl = (int(mpos) + int(mlen) - int(pos))
+           # if ovl >= 100:
+            #    print(ovl)
             ovrlp_seq += ovl
             for i, j in enumerate(read.query_alignment_sequence):
                 if j == 'C' and read.query_qualities[i] >= bs_q:
@@ -402,18 +406,18 @@ with pysam.AlignmentFile(BAM, compres) as SAM:
             print(f'Number of paired reads processed that satisfy thresholds is {read_counts} ', end="\r", flush=True)
             num_reads += 1000000
 
-    init_mism = len(mismatch)
+    init_mism = len(mismatch_ref)
     with open(SNP, "r") as snps:
         for line in snps:
-            if line.strip() in mismatch:
-                del mismatch[line.strip()]
+            if line.strip() in mismatch_ref:
+                del mismatch_ref[line.strip()]
                 del overlap_names[line.strip()]
 
     print(gtr1, gtr2, car1, car2, G_sum_r1, G_sum_r2, C_sum_r1, C_sum_r2)
     G_iv = str((((gtr1 + car2) / (G_sum_r1 + C_sum_r2)) / ((car1 + gtr2) / (C_sum_r1 + G_sum_r2))))
     G_ivl = math.log2((((gtr1 + car2) / (G_sum_r1 + C_sum_r2)) / ((car1 + gtr2) / (C_sum_r1 + G_sum_r2))))
     print(f'\nThe G -> T imbalance is {G_iv}')
-    print(f'\nThe G -> T log2 imbalance is {G_ivl}\n\nThe initial number of mismatches was {init_mism} while the number of found snps was {init_mism - len(mismatch)}')
+    print(f'\nThe G -> T log2 imbalance is {G_ivl}\n\nThe initial number of mismatches was {init_mism} while the number of found snps was {init_mism - len(mismatch_ref)}')
 
     ##todo Tidy this into functions
     for key, value in mismatch_ref.items():
