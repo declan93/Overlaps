@@ -43,7 +43,7 @@ overlap_names = defaultdict(list)
 
 # Thresholds #####
 bs_q = 20  # base quality thrshold
-cvg = 0  # 'coverage
+cvg = 20  # 'coverage
 mp_q = 40  # read mapping quality
 
 print(f'Base Quality Threshold is {bs_q}', flush=True)
