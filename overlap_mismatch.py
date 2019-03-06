@@ -43,7 +43,7 @@ overlap_names = defaultdict(list)
 
 # Thresholds #####
 bs_q = 20  # base quality thrshold
-cvg = 5  # 'coverage
+cvg = 0  # 'coverage
 mp_q = 40  # read mapping quality
 
 print(f'Base Quality Threshold is {bs_q}', flush=True)
@@ -213,7 +213,10 @@ with pysam.AlignmentFile(BAM, compres) as SAM:
         MDZ2 = re.findall(r'[A-Za-z]|-?\d+\.\d+|\d+', md2)
 
         if read_r1_1st_overlap(pos, mpos, rlen, mlen, md1, md2):
-            ovrlp_seq += (int(pos) + int(rlen) - int(mpos))
+            ovl = (int(pos) + int(rlen) - int(mpos))
+#            if ovl >= 100:
+ #               print(ovl)
+            ovrlp_seq += ovl
             for i, j in enumerate(read.query_alignment_sequence):
                 if j == 'C' and read.query_qualities[i] >= bs_q:
                     C_sum_r1 += 1
@@ -295,14 +298,18 @@ with pysam.AlignmentFile(BAM, compres) as SAM:
                         if m2_key in overlap_names.keys():
                             overlap_names[m2_key].append(str(ref+rmm_b))
                             overlap_names[m2_key].append(read.query_name)
+                            overlap_names[m2_key].append(str(ovl))
                         else:
-                            overlap_names[m2_key] = [(ref+rmm_b), read.query_name]
+                            overlap_names[m2_key] = [(ref+rmm_b), read.query_name, str(ovl)]
                     read2_pos += 1
             sub_dict = {}
             sub_dict_read2 = {}
 
         elif read_r2_1st_overlap(pos, mpos, rlen, mlen, md1, md2):
-            ovrlp_seq += (int(mpos) + int(mlen) - int(pos))
+            ovl = (int(mpos) + int(mlen) - int(pos))
+           # if ovl >= 100:
+            #    print(ovl)
+            ovrlp_seq += ovl
             for i, j in enumerate(read.query_alignment_sequence):
                 if j == 'C' and read.query_qualities[i] >= bs_q:
                     C_sum_r1 += 1
@@ -383,8 +390,9 @@ with pysam.AlignmentFile(BAM, compres) as SAM:
                         if m2_key in overlap_names.keys():
                             overlap_names[m2_key].append(str(ref+rmm_b))
                             overlap_names[m2_key].append(read.query_name)
+                            overlap_names[m2_key].append(str(ovl))
                         else:
-                            overlap_names[m2_key] = [(ref+rmm_b), read.query_name]
+                            overlap_names[m2_key] = [(ref+rmm_b), read.query_name, str(ovl)]
                     read2_pos += 1
 
             sub_dict = {}
@@ -398,24 +406,24 @@ with pysam.AlignmentFile(BAM, compres) as SAM:
             print(f'Number of paired reads processed that satisfy thresholds is {read_counts} ', end="\r", flush=True)
             num_reads += 1000000
 
-    init_mism = len(mismatch)
+    init_mism = len(mismatch_ref)
     with open(SNP, "r") as snps:
         for line in snps:
-            if line.strip() in mismatch:
-                del mismatch[line.strip()]
+            if line.strip() in mismatch_ref:
+                del mismatch_ref[line.strip()]
                 del overlap_names[line.strip()]
 
     print(gtr1, gtr2, car1, car2, G_sum_r1, G_sum_r2, C_sum_r1, C_sum_r2)
     G_iv = str((((gtr1 + car2) / (G_sum_r1 + C_sum_r2)) / ((car1 + gtr2) / (C_sum_r1 + G_sum_r2))))
     G_ivl = math.log2((((gtr1 + car2) / (G_sum_r1 + C_sum_r2)) / ((car1 + gtr2) / (C_sum_r1 + G_sum_r2))))
     print(f'\nThe G -> T imbalance is {G_iv}')
-    print(f'\nThe G -> T log2 imbalance is {G_ivl}\n\nThe initial number of mismatches was {init_mism} while the number of found snps was {init_mism - len(mismatch)}')
+    print(f'\nThe G -> T log2 imbalance is {G_ivl}\n\nThe initial number of mismatches was {init_mism} while the number of found snps was {init_mism - len(mismatch_ref)}')
 
     ##todo Tidy this into functions
-    for key, value in mismatch.items():
+    for key, value in mismatch_ref.items():
         fields = key.strip().split(':')
         pos_coverage = {}
-        for cov in SAM.pileup(fields[0], int(fields[1])-1, int(fields[1])):  # min_base_quality=0, nofilter=True):
+        for cov in SAM.pileup(fields[0], int(fields[1])-1, int(fields[1]), min_base_quality=0, nofilter=True):
             if int(cov.pos) == int(fields[1]):
                 for pileupread in cov.pileups:
                     if not pileupread.is_del and not pileupread.is_refskip and pileupread.alignment.mapq >= mp_q:
@@ -444,7 +452,7 @@ print('Writing mutations to file \n', flush=True)
 
 with open(name + '/' + name + '_substitutions.out', 'w') as out:
     out.write('pos\tref_alt\tmismatching_qualities\tmatching_qualities\n')
-    for key, value in mismatch.items():
+    for key, value in mismatch_ref.items():
         outstring = str(key) + '\t' + str(value) + '\t' + ",".join([str(x) for x in mm_quals[key]]) + '\t' + ",".join(
             [str(y) for y in m_quals[key]]) + '\n'
         out.write(outstring)
@@ -452,14 +460,14 @@ with open(name + '/' + name + '_substitutions.out', 'w') as out:
 print('Calculating Mutation counts where Pair agree \n', flush=True)
 
 with open(name + '/' + name + '_sub_counts.out', 'w') as cnts:
-    subs = Counter(mismatch.values())
+    subs = Counter(mismatch_ref.values())
     cnts.write('Sub Count Overlap\n')
     for key, value in subs.items():
         out = str(key) + ' ' + str(value) + ' ' + str(ovrlp_seq) + '\n'
         cnts.write(out)
 
 print(f'making VCF for {name}', flush=True)
-
+print(overlap_names)
 with open(name + '/' + name + '_substitutions.out', 'r') as IN:
     next(IN)
     with open(name + '/' + name + '.vcf', 'w') as out:
@@ -513,6 +521,7 @@ with open(name + '/' + name + '_substitutions.out', 'r') as IN:
             'assembly=b37,length=35477943>\n##INFO=<ID=DP,Number=1,Type=Integer,Description="Read Depth">\n'
             '##INFO=<ID=AC,Number=1,Type=Integer,Description="Nonrefernece Count">\n'
             '##INFO=<ID=OV,Number=1,Type=Integer,Description="Overlapping mismatch Count">\n'
+            '##INFO=<ID=OVL_LEN,Number=1,Type=String,Description="Overlapping sequencelength">\n'
             '##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype tag">\n'
             '#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t{}\n'.format(name))
         # move to new file hash headers and only write headers that have mutations
@@ -529,7 +538,9 @@ with open(name + '/' + name + '_substitutions.out', 'r') as IN:
                 except IndexError:
                     key = "NA"
             out_str = location[0] + '\t' + location[1] + "\t" + fields[
-                0] + '\t' + ref + '\t' + mut + f'\t.\t.\tDP={key};AC={len(mm_quals[fields[0]])-1};OV={(len(overlap_names[fields[0]])) if fields[0] in overlap_names else 0}\tGT\t1/0\n'
+                0] + '\t' + ref + '\t' + mut + f'\t.\t.\tDP={key};AC={len(mm_quals[fields[0]])-1};' \
+                f'OV={(len(overlap_names[fields[0]][0::3]))};' \
+                f'OVL_LEN={",".join(overlap_names[fields[0]][2::3])}\tGT\t1/0\n'
             out.write(out_str)
 
 tme = (time.time() - strt) / 3600
