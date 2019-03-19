@@ -15,8 +15,8 @@ from matplotlib.offsetbox import AnchoredText
 import pysam
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib
-matplotlib.use('Agg')
+#import matplotlib
+#matplotlib.use('Agg')
 
 
 strt = time.time()
@@ -42,14 +42,13 @@ m_quals = defaultdict(list)
 overlap_names = defaultdict(list)
 
 # Thresholds #####
-bs_q = 20  # base quality thrshold
+bs_q = 30  # base quality thrshold
 cvg = 20  # 'coverage
-mp_q = 40  # read mapping quality
+mp_q = 60  # read mapping quality
 
 print(f'Base Quality Threshold is {bs_q}', flush=True)
 print(f'Putative Mutation Sequencing Depth Threshold is {cvg}', flush=True)
 print(f'Mapping Quality is {mp_q}\n', flush=True)
-
 
 # reverse complement not currently used will need it for strand asymmetry
 def reverse_complement(dna):
@@ -286,14 +285,14 @@ with pysam.AlignmentFile(BAM, compres) as SAM:
                     if m2_key in sub_dict and m2_key in sub_dict_read2 and sub_dict[m2_key] == \
                             sub_dict_read2[m2_key]:  # and not m2_key in snp_loc:
                         if read.is_reverse:
-                            mismatch[m2_key] = reverse_complement(ref + rmm_b)
+                           # mismatch[m2_key] = reverse_complement(ref + rmm_b)
                             r1r_c += 1
                             mismatch_ref[m2_key] = ref + rmm_b
-                            mismatch_r1_r[m2_key] = ref + rmm_b
+                            #mismatch_r1_r[m2_key] = ref + rmm_b
                         else:
-                            mismatch[m2_key] = ref + rmm_b
+                            #mismatch[m2_key] = ref + rmm_b
                             mismatch_ref[m2_key] = ref + rmm_b
-                            mismatch_r1_f[m2_key] = ref + rmm_b
+                           # mismatch_r1_f[m2_key] = ref + rmm_b
                             r1f_c += 1
                         if m2_key in overlap_names.keys():
                             overlap_names[m2_key].append(str(ref+rmm_b))
@@ -378,15 +377,15 @@ with pysam.AlignmentFile(BAM, compres) as SAM:
                     if m2_key in sub_dict and m2_key in sub_dict_read2 and sub_dict[m2_key] == \
                             sub_dict_read2[m2_key]:  # and not m2_key in snp_loc:
                         if read.is_reverse:
-                            mismatch[m2_key] = reverse_complement(ref + rmm_b)
+                        #    mismatch[m2_key] = reverse_complement(ref + rmm_b)
                             mismatch_ref[m2_key] = ref + rmm_b
-                            mismatch_r1_r[m2_key] = ref + rmm_b
+                        #    mismatch_r1_r[m2_key] = ref + rmm_b
                             r1r_c += 1
                         else:
-                            mismatch[m2_key] = ref + rmm_b
+                         #   mismatch[m2_key] = ref + rmm_b
                             r1f_c += 1
                             mismatch_ref[m2_key] = ref + rmm_b
-                            mismatch_r1_f[m2_key] = ref + rmm_b
+                            #mismatch_r1_f[m2_key] = ref + rmm_b
                         if m2_key in overlap_names.keys():
                             overlap_names[m2_key].append(str(ref+rmm_b))
                             overlap_names[m2_key].append(read.query_name)
@@ -394,7 +393,7 @@ with pysam.AlignmentFile(BAM, compres) as SAM:
                         else:
                             overlap_names[m2_key] = [(ref+rmm_b), read.query_name, str(ovl)]
                     read2_pos += 1
-
+            
             sub_dict = {}
             sub_dict_read2 = {}
         else:
@@ -413,7 +412,7 @@ with pysam.AlignmentFile(BAM, compres) as SAM:
                 del mismatch_ref[line.strip()]
                 del overlap_names[line.strip()]
 
-    print(gtr1, gtr2, car1, car2, G_sum_r1, G_sum_r2, C_sum_r1, C_sum_r2)
+  #  print(gtr1, gtr2, car1, car2, G_sum_r1, G_sum_r2, C_sum_r1, C_sum_r2)
     G_iv = str((((gtr1 + car2) / (G_sum_r1 + C_sum_r2)) / ((car1 + gtr2) / (C_sum_r1 + G_sum_r2))))
     G_ivl = math.log2((((gtr1 + car2) / (G_sum_r1 + C_sum_r2)) / ((car1 + gtr2) / (C_sum_r1 + G_sum_r2))))
     print(f'\nThe G -> T imbalance is {G_iv}')
@@ -547,149 +546,149 @@ tme = (time.time() - strt) / 3600
 
 ## plot
 
-cvg_mism = {}
-for key, value in mismatch.items():
-    if mm_quals[key]:
-        if mm_quals[key][0] >= cvg:
-            cvg_mism[key] = value
-    elif m_quals[key]:
-        if m_quals[key][0] >= cvg:
-            cvg_mism[key] = value
-    else:
-        continue
+#cvg_mism = {}
+#for key, value in mismatch.items():
+#    if mm_quals[key]:
+#        if mm_quals[key][0] >= cvg:
+#            cvg_mism[key] = value
+#    elif m_quals[key]:
+#        if m_quals[key][0] >= cvg:
+#            cvg_mism[key] = value
+#    else:
+#        continue
+#
+#cvg_mism_ref = {}
+#for key, value in mismatch_ref.items():
+#    if mm_quals[key]:
+#        if mm_quals[key][0] >= cvg:
+#            cvg_mism_ref[key] = value
+#    elif m_quals[key]:
+#        if m_quals[key][0] >= cvg:
+#            cvg_mism_ref[key] = value
+#    else:
+#        continue
+#
+#cvg_mism_r1f = {}
+#for key, value in mismatch_r1_f.items():
+#    if mm_quals[key]:
+#        if mm_quals[key][0] >= cvg:
+#            cvg_mism_r1f[key] = value
+#    elif m_quals[key]:
+#        if m_quals[key][0] >= cvg:
+#            cvg_mism_r1f[key] = value
+#    else:
+#        continue
 
-cvg_mism_ref = {}
-for key, value in mismatch_ref.items():
-    if mm_quals[key]:
-        if mm_quals[key][0] >= cvg:
-            cvg_mism_ref[key] = value
-    elif m_quals[key]:
-        if m_quals[key][0] >= cvg:
-            cvg_mism_ref[key] = value
-    else:
-        continue
-        
-cvg_mism_r1f = {}
-for key, value in mismatch_r1_f.items():
-    if mm_quals[key]:
-        if mm_quals[key][0] >= cvg:
-            cvg_mism_r1f[key] = value
-    elif m_quals[key]:
-        if m_quals[key][0] >= cvg:
-            cvg_mism_r1f[key] = value
-    else:
-        continue
+#cvg_mism_r1r = {}
+#for key, value in mismatch_r1_r.items():
+ #   if mm_quals[key]:
+ #       if mm_quals[key][0] >= cvg:
+ #           cvg_mism_r1r[key] = value
+ #   elif m_quals[key]:
+ #       if m_quals[key][0] >= cvg:
+ #           cvg_mism_r1r[key] = value
+ #   else:
+ #       continue
 
-cvg_mism_r1r = {}
-for key, value in mismatch_r1_r.items():
-    if mm_quals[key]:
-        if mm_quals[key][0] >= cvg:
-            cvg_mism_r1r[key] = value
-    elif m_quals[key]:
-        if m_quals[key][0] >= cvg:
-            cvg_mism_r1r[key] = value
-    else:
-        continue
-
-subs1 = Counter(cvg_mism.values())
-subs2 = Counter(cvg_mism_ref.values())
-subs3 = Counter(cvg_mism_r1f.values())
-subs4 = Counter(cvg_mism_r1r.values())
+#subs1 = Counter(cvg_mism.values())
+#subs2 = Counter(cvg_mism_ref.values())
+#subs3 = Counter(cvg_mism_r1f.values())
+#subs4 = Counter(cvg_mism_r1r.values())
 
 print(f'\n % of Read 1 mapping to forward strand is {(r1f_c/(r1f_c+r1r_c))}\n')
 
-f, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, sharex='col', sharey='row', figsize=(13,13))
+#f, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, sharex='col', sharey='row', figsize=(13,13))
 
 ### Read 1 aligned
 
-per_CTR1 = (subs1["CA"]/sum(subs1.values()), subs1["GT"]/sum(subs1.values()),
-          subs1["CG"]/sum(subs1.values()), subs1["GC"]/sum(subs1.values()),
-          subs1["CT"]/sum(subs1.values()), subs1["GA"]/sum(subs1.values()),
-          subs1["TA"]/sum(subs1.values()), subs1["AT"]/sum(subs1.values()),
-          subs1["TC"]/sum(subs1.values()), subs1["AG"]/sum(subs1.values()),
-          subs1["TG"]/sum(subs1.values()), subs1["AC"]/sum(subs1.values()))
-
-# create plot
-bar_width = 1
-opacity = 0.8
-
-y_pos = [0,1,4,5,8,9,12,13,16,17,20,21]
-ax1.bar(y_pos, per_CTR1, bar_width,
-                 alpha=opacity,
-                 color=['b','g','b','g','b','g','b','g','b','g','b','g'])
-
-ax1.set_xlabel('Substitutions')
-ax1.set_ylabel('% Relative contribution')
-ax1.set_title(f'Mutational frequencies where read 1 have no bearing\n to the reference for {name}')
-ax1.set_xticks(y_pos)
-ax1.set_xticklabels(('CA', 'GT', 'CG', 'GC', 'CT', 'GA', 'TA', 'AT', 'TC', 'AG', 'TG', 'AC'))
-
-## Reference orientated
-
-per_CTR1F = (subs2["CA"]/sum(subs2.values()), subs2["GT"]/sum(subs2.values()),
-          subs2["CG"]/sum(subs2.values()), subs2["GC"]/sum(subs2.values()),
-          subs2["CT"]/sum(subs2.values()), subs2["GA"]/sum(subs2.values()),
-          subs2["TA"]/sum(subs2.values()), subs2["AT"]/sum(subs2.values()),
-          subs2["TC"]/sum(subs2.values()), subs2["AG"]/sum(subs2.values()),
-          subs2["TG"]/sum(subs2.values()), subs2["AC"]/sum(subs2.values()))
-
-# create plot
-
-ax2.bar(y_pos, per_CTR1F, bar_width,
-                 alpha=opacity,
-                 color=['b','g','b','g','b','g','b','g','b','g','b','g'])
-
-ax2.set_xlabel('Substitutions')
-ax2.set_ylabel('% Relative contribution')
-ax2.set_title(f'Mutational frequencies with respect to\n the reference for {name}')
-ax2.set_xticks(y_pos)
-ax2.set_xticklabels(('CA', 'GT', 'CG', 'GC', 'CT', 'GA', 'TA', 'AT', 'TC', 'AG', 'TG', 'AC'))
-
-### Read1 forward strand
-
-R1F = (subs3["CA"]/sum(subs3.values()), subs3["GT"]/sum(subs3.values()),
-          subs3["CG"]/sum(subs3.values()), subs3["GC"]/sum(subs3.values()),
-          subs3["CT"]/sum(subs3.values()), subs3["GA"]/sum(subs3.values()),
-          subs3["TA"]/sum(subs3.values()), subs3["AT"]/sum(subs3.values()),
-          subs3["TC"]/sum(subs3.values()), subs3["AG"]/sum(subs3.values()),
-          subs3["TG"]/sum(subs3.values()), subs3["AC"]/sum(subs3.values()))
-
-# create plot
-
-ax3.bar(y_pos, R1F, bar_width, alpha=opacity,color=['b','g','b','g','b','g','b','g','b','g','b','g'])
-
-ax3.set_xlabel('Substitutions')
-ax3.set_ylabel('% Relative contribution')
-ax3.set_title(f'Mutational frequencies where read 1\n maps to the + for {name}')
-ax3.set_xticks(y_pos)
-ax3.set_xticklabels(('CA', 'GT', 'CG', 'GC', 'CT', 'GA', 'TA', 'AT', 'TC', 'AG', 'TG', 'AC'))
-
-### Read1 maps to the reverse
-R1R = (subs4["CA"]/sum(subs4.values()), subs4["GT"]/sum(subs4.values()),
-          subs4["CG"]/sum(subs4.values()), subs4["GC"]/sum(subs4.values()),
-          subs4["CT"]/sum(subs4.values()), subs4["GA"]/sum(subs4.values()),
-          subs4["TA"]/sum(subs4.values()), subs4["AT"]/sum(subs4.values()),
-          subs4["TC"]/sum(subs4.values()), subs4["AG"]/sum(subs4.values()),
-          subs4["TG"]/sum(subs4.values()), subs4["AC"]/sum(subs4.values()))
-
-
-box_text = f'G->T log2 damage is {G_ivl:.3f}\nThe read1 + strand % = {(r1f_c/(r1f_c+r1r_c)):.3f}'
-props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
-ax3.text(0.5, 0.95, box_text, transform=ax1.transAxes, fontsize=14)
-# create plot
-
-ax4.bar(y_pos, R1R, bar_width,
-                 alpha=opacity,
-                 color=['b','g','b','g','b','g','b','g','b','g','b','g'])
-
-ax4.set_xlabel('Substitutions')
-ax4.set_ylabel('% Relative contribution')
-ax4.set_title(f'Mutational frequencies where read 1\n maps to the - strand for {name}')
-ax4.set_xticks(y_pos)
-ax4.set_xticklabels(('CA', 'GT', 'CG', 'GC', 'CT', 'GA', 'TA', 'AT', 'TC', 'AG', 'TG', 'AC'))
-#ax4.savefig(name + "/" + name + '_read1_only_reverse_strand.png')
-
-f.tight_layout()
-f.savefig(name + '/' + name + '_.png')
+#per_CTR1 = (subs1["CA"]/sum(subs1.values()), subs1["GT"]/sum(subs1.values()),
+#           subs1["CG"]/sum(subs1.values()), subs1["GC"]/sum(subs1.values()),
+#           subs1["CT"]/sum(subs1.values()), subs1["GA"]/sum(subs1.values()),
+#           subs1["TA"]/sum(subs1.values()), subs1["AT"]/sum(subs1.values()),
+#           subs1["TC"]/sum(subs1.values()), subs1["AG"]/sum(subs1.values()),
+#           subs1["TG"]/sum(subs1.values()), subs1["AC"]/sum(subs1.values()))
+#
+# # create plot
+# #bar_width = 1
+# #opacity = 0.8
+#
+# #y_pos = [0,1,4,5,8,9,12,13,16,17,20,21]
+# #ax1.bar(y_pos, per_CTR1, bar_width,
+# #                 alpha=opacity,
+# #                 color=['b','g','b','g','b','g','b','g','b','g','b','g'])
+#
+# #ax1.set_xlabel('Substitutions')
+# #ax1.set_ylabel('% Relative contribution')
+# #ax1.set_title(f'Mutational frequencies where read 1 have no bearing\n to the reference for {name}')
+# #ax1.set_xticks(y_pos)
+# #ax1.set_xticklabels(('CA', 'GT', 'CG', 'GC', 'CT', 'GA', 'TA', 'AT', 'TC', 'AG', 'TG', 'AC'))
+#
+# ## Reference orientated
+# #
+# # per_CTR1F = (subs2["CA"]/sum(subs2.values()), subs2["GT"]/sum(subs2.values()),
+# #           subs2["CG"]/sum(subs2.values()), subs2["GC"]/sum(subs2.values()),
+# #           subs2["CT"]/sum(subs2.values()), subs2["GA"]/sum(subs2.values()),
+# #           subs2["TA"]/sum(subs2.values()), subs2["AT"]/sum(subs2.values()),
+# #           subs2["TC"]/sum(subs2.values()), subs2["AG"]/sum(subs2.values()),
+# #           subs2["TG"]/sum(subs2.values()), subs2["AC"]/sum(subs2.values()))
+# #
+# # create plot
+#
+# ax2.bar(y_pos, per_CTR1F, bar_width,
+#                  alpha=opacity,
+#                  color=['b','g','b','g','b','g','b','g','b','g','b','g'])
+#
+# ax2.set_xlabel('Substitutions')
+# ax2.set_ylabel('% Relative contribution')
+# ax2.set_title(f'Mutational frequencies with respect to\n the reference for {name}')
+# ax2.set_xticks(y_pos)
+# ax2.set_xticklabels(('CA', 'GT', 'CG', 'GC', 'CT', 'GA', 'TA', 'AT', 'TC', 'AG', 'TG', 'AC'))
+#
+# ### Read1 forward strand
+#
+# R1F = (subs3["CA"]/sum(subs3.values()), subs3["GT"]/sum(subs3.values()),
+#           subs3["CG"]/sum(subs3.values()), subs3["GC"]/sum(subs3.values()),
+#           subs3["CT"]/sum(subs3.values()), subs3["GA"]/sum(subs3.values()),
+#           subs3["TA"]/sum(subs3.values()), subs3["AT"]/sum(subs3.values()),
+#           subs3["TC"]/sum(subs3.values()), subs3["AG"]/sum(subs3.values()),
+#           subs3["TG"]/sum(subs3.values()), subs3["AC"]/sum(subs3.values()))
+#
+# # create plot
+#
+# ax3.bar(y_pos, R1F, bar_width, alpha=opacity,color=['b','g','b','g','b','g','b','g','b','g','b','g'])
+#
+# ax3.set_xlabel('Substitutions')
+# ax3.set_ylabel('% Relative contribution')
+# ax3.set_title(f'Mutational frequencies where read 1\n maps to the + for {name}')
+# ax3.set_xticks(y_pos)
+# ax3.set_xticklabels(('CA', 'GT', 'CG', 'GC', 'CT', 'GA', 'TA', 'AT', 'TC', 'AG', 'TG', 'AC'))
+#
+# ### Read1 maps to the reverse
+# R1R = (subs4["CA"]/sum(subs4.values()), subs4["GT"]/sum(subs4.values()),
+#           subs4["CG"]/sum(subs4.values()), subs4["GC"]/sum(subs4.values()),
+#           subs4["CT"]/sum(subs4.values()), subs4["GA"]/sum(subs4.values()),
+#           subs4["TA"]/sum(subs4.values()), subs4["AT"]/sum(subs4.values()),
+#           subs4["TC"]/sum(subs4.values()), subs4["AG"]/sum(subs4.values()),
+#           subs4["TG"]/sum(subs4.values()), subs4["AC"]/sum(subs4.values()))
+#
+#
+# box_text = f'G->T log2 damage is {G_ivl:.3f}\nThe read1 + strand % = {(r1f_c/(r1f_c+r1r_c)):.3f}'
+# props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
+# ax3.text(0.5, 0.95, box_text, transform=ax1.transAxes, fontsize=14)
+# # create plot
+#
+# ax4.bar(y_pos, R1R, bar_width,
+#                  alpha=opacity,
+#                  color=['b','g','b','g','b','g','b','g','b','g','b','g'])
+#
+# ax4.set_xlabel('Substitutions')
+# ax4.set_ylabel('% Relative contribution')
+# ax4.set_title(f'Mutational frequencies where read 1\n maps to the - strand for {name}')
+# ax4.set_xticks(y_pos)
+# ax4.set_xticklabels(('CA', 'GT', 'CG', 'GC', 'CT', 'GA', 'TA', 'AT', 'TC', 'AG', 'TG', 'AC'))
+# #ax4.savefig(name + "/" + name + '_read1_only_reverse_strand.png')
+#
+# f.tight_layout()
+# f.savefig(name + '/' + name + '_.png')
 print(f'overlap_mismatch has completed. The number of overlapping bases is {ovrlp_seq}\n'
       f'The number of putative mismatches is {sum(subs.values())}\nThe time taking to analyse {name} was {tme} hrs', flush=True)
